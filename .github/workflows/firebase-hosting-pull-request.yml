@@ -15,7 +15,7 @@ jobs:
         run: |
           echo "VITE_BASE_URL=${VITE_BASE_URL}" > .env.production
       - uses: actions/checkout@v3
-      - run: npm run build
+      - run: npm install && npm run build
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
