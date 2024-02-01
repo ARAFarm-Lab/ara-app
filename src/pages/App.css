@@ -1,0 +1,23 @@
+#root {
+  max-width: 500px;
+  min-height: 100vh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  box-shadow: 0 0 48px 0 rgba(0,0,0,.2);
+}
+
+.fade {
+  opacity: 0;
+  animation: fade-in 0.3s ease-in-out forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
