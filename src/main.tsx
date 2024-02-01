@@ -55,7 +55,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <ReactQueryDevtools initialIsOpen={false} />
       <CssVarsProvider
         theme={theme}
-        defaultMode="system"
+        defaultMode="light"
         modeStorageKey="sys_mode"
       >
         <CssBaseline />
