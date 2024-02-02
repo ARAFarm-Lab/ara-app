@@ -13,9 +13,6 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      devOptions: {
-        enabled: true
-      },
       manifest: {
         name: 'ARA Farm IoT Panel',
         short_name: 'ARA IoT Panel',
