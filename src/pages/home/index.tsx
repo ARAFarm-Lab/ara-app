@@ -117,4 +117,4 @@ type ButtonCardProps = {
     onClick?: () => void
 }
 
-export default Home 
+export default Home
