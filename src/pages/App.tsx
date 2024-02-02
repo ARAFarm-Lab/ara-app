@@ -1,26 +1,42 @@
-import { useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import ListItemDecorator from '@mui/joy/ListItemDecorator';
 import Tabs from '@mui/joy/Tabs';
 import TabList from '@mui/joy/TabList';
 import Tab, { tabClasses } from '@mui/joy/Tab';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
-import FavoriteBorder from '@mui/icons-material/FavoriteBorder';
-import Search from '@mui/icons-material/Search';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 import Person from '@mui/icons-material/Person';
-import './App.css'
-import Home from './home';
+import { Box } from '@mui/joy';
+import './App.css';
+import loadable from '@loadable/component'
 
 const colors = ['primary', 'danger', 'success', 'warning'] as const;
-
 const pages = [
-  Home,
-  () => <div>Page 2</div>,
+  loadable(() => import ('./home')),
+  loadable(() => import('./schedule')),
   () => <div>Page 3</div>,
-  () => <div>Page 4</div>,
 ]
 
 function App() {
+  const [windowReady, setWindowReady] = useState<boolean>(false)
   const [tabIndex, setTabIndex] = useState<number>(0)
+
+  useLayoutEffect(() => {
+    const queryString = window.location.search
+    const urlParams = new URLSearchParams(queryString);
+    if (urlParams.has('t')) {
+      const t = Number(urlParams.get('t'))
+      if (t < 1 || t > pages.length) return
+      setTabIndex(t - 1)
+    }
+    setWindowReady(true)
+  }, [])
+
+  useEffect(() => {
+    if (!windowReady) return
+    window.history.replaceState({}, '', `?t=${tabIndex + 1}`)
+  }, [tabIndex, windowReady])
+
   return (
     <>
       <Page index={tabIndex} />
@@ -31,9 +47,9 @@ function App() {
 
 const Page = ({ index }: { index: number }) => {
   const Page = pages[index]
-  return <div key={index} className='fade'>
+  return <Box key={index} sx={{ pb: 2 }} className='fade'>
     <Page />
-  </div>
+  </Box>
 }
 
 const BottomNavigation = ({ currentIndex, onIndexChange }: BottomNavigationProps) => {
@@ -43,10 +59,12 @@ const BottomNavigation = ({ currentIndex, onIndexChange }: BottomNavigationProps
     value={currentIndex}
     onChange={(_, value) => onIndexChange(value as number)}
     sx={(theme) => ({
-      p: 1,
+      mt: 'auto',
       borderRadius: 16,
-      m: 'auto 2em 2em 2em',
       position: 'sticky',
+      bottom: 0,
+      left: 0,
+      right: 0,
       boxShadow: theme.shadow.sm,
       '--joy-shadowChannel': theme.vars.palette[colors[currentIndex]].darkChannel,
       [`& .${tabClasses.root}`]: {
@@ -62,13 +80,12 @@ const BottomNavigation = ({ currentIndex, onIndexChange }: BottomNavigationProps
     })}
   >
     <TabList
-      variant="plain"
+      variant='soft'
       size="sm"
       disableUnderline
-      sx={{ borderRadius: 'lg', p: 0 }}
+    // sx={{ borderRadius: 'sm', p: 0 }}
     >
       <Tab
-        disableIndicator
         orientation="vertical"
         {...(currentIndex === 0 && { color: colors[0] })}
       >
@@ -78,29 +95,17 @@ const BottomNavigation = ({ currentIndex, onIndexChange }: BottomNavigationProps
         Home
       </Tab>
       <Tab
-        disableIndicator
         orientation="vertical"
         {...(currentIndex === 1 && { color: colors[1] })}
       >
         <ListItemDecorator>
-          <FavoriteBorder />
+          <ScheduleIcon />
         </ListItemDecorator>
-        Likes
+        Schedules
       </Tab>
       <Tab
-        disableIndicator
         orientation="vertical"
         {...(currentIndex === 2 && { color: colors[2] })}
-      >
-        <ListItemDecorator>
-          <Search />
-        </ListItemDecorator>
-        Search
-      </Tab>
-      <Tab
-        disableIndicator
-        orientation="vertical"
-        {...(currentIndex === 3 && { color: colors[3] })}
       >
         <ListItemDecorator>
           <Person />
