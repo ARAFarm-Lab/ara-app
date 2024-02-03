@@ -83,7 +83,6 @@ const BottomNavigation = ({ currentIndex, onIndexChange }: BottomNavigationProps
       variant='soft'
       size="sm"
       disableUnderline
-    // sx={{ borderRadius: 'sm', p: 0 }}
     >
       <Tab
         orientation="vertical"
