@@ -22,7 +22,6 @@ const network = {
         return doRequest(endpoint, config)
     },
     post: async <T>(endpoint: string, body?: any): Promise<T> => {
-        console.log("test")
         return doRequest(endpoint, { method: 'post', body })
     },
     put: async (endpoint: string, body?: any) => {
