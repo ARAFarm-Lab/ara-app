@@ -1,6 +1,4 @@
-import { ActionType } from "@/constants/action.types"
-
-type ActionValue = boolean | number
+import { ActionType, ActionValue } from "@/constants/action.types"
 
 export type DispatchActionRequest = {
     action_type: ActionType

@@ -22,7 +22,7 @@ const modalTransition: Partial<ModalTransition> = {
     exited: { transform: `translateY(100%)` },
 }
 
-const Modal = ({ title, isOpen, onClose, children, buttonActions }: ModalProps) => {
+const Modal = ({title, isOpen, onClose, children, buttonActions }: ModalProps) => {
     return (
         <>
             <Transition in={isOpen} timeout={modalTransitionDelayMs}>
@@ -57,7 +57,7 @@ const Modal = ({ title, isOpen, onClose, children, buttonActions }: ModalProps) 
                             }}
                         >
                             {title && <DialogTitle>{title}</DialogTitle>}
-                            <DialogContent>{children}</DialogContent>
+                            <DialogContent sx={{ pt: 2 }}>{children}</DialogContent>
                             {!!buttonActions?.length && (
                                 <Box
                                     sx={{
@@ -73,6 +73,7 @@ const Modal = ({ title, isOpen, onClose, children, buttonActions }: ModalProps) 
                                             variant={action.variant}
                                             color={action.color}
                                             onClick={action.onClick}
+                                            loading={action.loading}
                                         >
                                             {action.label}
                                         </Button>
@@ -93,6 +94,7 @@ type ModalProps = {
     children: React.ReactNode,
     onClose?: () => void,
     buttonActions?: {
+        loading?: boolean
         label: string
         variant: VariantProp,
         color: ColorPaletteProp,
