@@ -4,8 +4,10 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { CssBaseline, CssVarsProvider, extendTheme } from '@mui/joy';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 import App from './pages/App.tsx'
 import 'dayjs/locale/id'
 
@@ -15,6 +17,7 @@ import '@fontsource/inter/600.css';
 import '@fontsource/inter/700.css';
 
 import './index.css'
+import { LocalizationProvider } from '@mui/x-date-pickers';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDybZITMkE7sCujRU-MlJlSmwmg9agdBbA",
@@ -25,42 +28,21 @@ const firebaseConfig = {
   appId: "1:727147745837:web:1429de955e8f9c81029ea4"
 };
 
-dayjs.locale('id')
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault('Asia/Jakarta');
+
 const app = initializeApp(firebaseConfig);
 getAnalytics(app)
 
 const queryClient = new QueryClient()
-const theme = extendTheme({
-  colorSchemes: {
-    dark: {
-      palette: {
-        background: {
-          body: '#f1f3f4'
-        }
-      }
-    },
-    light: {
-      palette: {
-        background: {
-          body: '#f1f3f4'
-        }
-      }
-    },
-  }
-})
-
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <ReactQueryDevtools initialIsOpen={false} />
-      <CssVarsProvider
-        theme={theme}
-        defaultMode="light"
-        modeStorageKey="sys_mode"
-      >
-        <CssBaseline />
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
         <App />
-      </CssVarsProvider>
+      </LocalizationProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 )

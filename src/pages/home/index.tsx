@@ -42,7 +42,6 @@ const Home = () => {
             device_id: 1,
             value: state,
         }
-        console.log(state, request)
         mutator.mutate(request)
     }
 
