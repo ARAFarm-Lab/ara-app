@@ -1,17 +1,28 @@
 import { Box, Card, Typography } from '@mui/joy'
 import './index.css'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { QUERY_KEY_GET_LAST_ACTION } from '@/apis/action.keys'
 import action from '@/apis/action'
-import { ActionType } from '@/constants/action.types'
+import report from '@/apis/report'
+import { QUERY_GET_SENSOR_REPORT } from '@/apis/report.keys'
+import { QUERY_KEY_GET_LAST_ACTION } from '@/apis/action.keys'
+import { ActionType } from '@/constants/action'
 import {
     DispatchActionRequest,
     LastActionResponse
 } from '@/apis/action.types'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { LineChart } from '@mui/x-charts/LineChart'
+import { SensorReport, SensorValue } from '@/apis/report.types'
+import dayjs, { Dayjs } from 'dayjs'
+import { SensorType } from '@/constants/sensor'
 
 const Home = () => {
     const queryClient = useQueryClient()
+    const [reportData, setReportData] = useState<{ [key in SensorType]: SensorValue[] }>({
+        [SensorType.SoilMoisture]: [],
+    })
+    const [reportStartTime, setReportStartTime] = useState<Dayjs>(createDateHourDayJSNow().add(-1, "hour"))
+
     const builtInLEDQuery = useQuery<LastActionResponse>({
         queryKey: [QUERY_KEY_GET_LAST_ACTION, 1, ActionType.BuiltInLED],
         queryFn: () => action.getLastAction(1, ActionType.BuiltInLED),
@@ -20,6 +31,16 @@ const Home = () => {
     const relayQuery = useQuery<LastActionResponse>({
         queryKey: [QUERY_KEY_GET_LAST_ACTION, 1, ActionType.Relay],
         queryFn: () => action.getLastAction(1, ActionType.Relay),
+    })
+
+    const soilMoistureSensorReportQuery = useQuery<SensorReport>({
+        queryKey: [QUERY_GET_SENSOR_REPORT, reportStartTime.format()],
+        queryFn: () => report.getSensorReport({
+            start_time: reportStartTime.format(),
+            end_time: createDateHourDayJSNow().format(),
+            device_id: 1,
+            sensor_type: SensorType.SoilMoisture
+        }),
     })
 
     const builtInLEDMutation = useMutation({
@@ -45,11 +66,55 @@ const Home = () => {
         mutator.mutate(request)
     }
 
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setReportStartTime(createDateHourDayJSNow().add(-1, "minutes"))
+        }, 60 * 1000) // 1 minute
+
+        return () => { clearTimeout(timeout) }
+    }, [reportStartTime])
+
+    useEffect(() => {
+        if (soilMoistureSensorReportQuery.isLoading) return
+        setReportData(prev => ({
+            ...prev,
+            [SensorType.SoilMoisture]: appendReportData(prev[SensorType.SoilMoisture], soilMoistureSensorReportQuery.data?.data)
+        }))
+    }, [soilMoistureSensorReportQuery.data, soilMoistureSensorReportQuery.isLoading])
+
     return <>
         <Box sx={{ p: 2 }}>
             <Typography fontSize="1.2rem" fontWeight='600'>{generateGreetingMessage()}</Typography>
             <Typography fontSize="sm">Admin</Typography>
         </Box>
+        <LineChart
+            xAxis={[{
+                dataKey: 'time',
+                scaleType: 'time',
+                min: new Date(reportData[SensorType.SoilMoisture][0]?.time),
+                max: new Date(reportData[SensorType.SoilMoisture][reportData[SensorType.SoilMoisture].length - 1]?.time),
+                valueFormatter: (date: Date) => dayjs(date).format("HH:mm"),
+            }]}
+            series={[
+                {
+                    dataKey: "value_percentage",
+                    label: "Percentage",
+                    showMark: false,
+                    area: true,
+                    color: '#7EC0EE'
+                },
+            ]}
+            yAxis={[{ label: '%' }]}
+            slotProps={{
+                legend: { hidden: true }
+            }}
+            // Need to parse the time to date object since LineChart can not accept string as input for the xAxis
+            dataset={reportData[SensorType.SoilMoisture].map(data => ({
+                ...data,
+                time: new Date(data.time),
+            }))}
+            height={200}
+        />
         <Box sx={{ display: 'grid', gap: 2, margin: 2, gridTemplateColumns: '1fr 1fr' }}>
             <ButtonCard title='Built In LED' isLoading={builtInLEDQuery.isFetching || builtInLEDMutation.isPending} onClick={() => mutateState(ActionType.BuiltInLED, !(builtInLEDState?.value as boolean))}>
                 <StatusChip on={builtInLEDState?.value as boolean} />
@@ -87,6 +152,13 @@ const StatusChip = ({ on }: { on: boolean }) => {
     </Card>
 }
 
+const appendReportData = (prev: SensorValue[], data?: SensorValue[]): SensorValue[] => {
+    if (!data || !prev) {
+        return prev
+    }
+    return [...prev.slice(data.length), ...data]
+}
+
 const convertTimeToFulldate = (time: Date) => {
     const year = time.getFullYear()
     const month = time.getMonth() + 1
@@ -95,6 +167,11 @@ const convertTimeToFulldate = (time: Date) => {
     const minutes = time.getMinutes()
     const seconds = time.getSeconds()
     return `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day} ${hours < 10 ? '0' + hours : hours}:${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`
+}
+
+const createDateHourDayJSNow = () => {
+    return dayjs()
+        .set("second", 0)
 }
 
 const generateGreetingMessage = () => {
