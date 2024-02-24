@@ -1,4 +1,4 @@
-import { ActionType, ActionValue } from "@/constants/action.types"
+import { ActionType, ActionValue } from "@/constants/action"
 
 export type DispatchActionRequest = {
     action_type: ActionType

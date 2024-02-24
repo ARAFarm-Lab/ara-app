@@ -1,4 +1,4 @@
-import { SchedulerRecurringMode } from "@/constants/scheduler.types"
+import { SchedulerRecurringMode } from "@/constants/scheduler"
 import { DispatchActionRequest } from "./action.types"
 
 export type CreateSchedulerRequest = {

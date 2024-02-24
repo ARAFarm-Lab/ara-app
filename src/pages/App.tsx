@@ -7,14 +7,14 @@ import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import Person from '@mui/icons-material/Person';
 import { Box } from '@mui/joy';
-import './App.css';
 import loadable from '@loadable/component'
+import './App.css';
 
 const colors = ['primary', 'danger', 'success', 'warning'] as const;
 const pages = [
-  loadable(() => import ('./home')),
+  loadable(() => import('./home')),
   loadable(() => import('./schedule')),
-  () => <div>Page 3</div>,
+  loadable(() => import('./profile')),
 ]
 
 function App() {
