@@ -5,7 +5,7 @@ import TabList from '@mui/joy/TabList';
 import Tab, { tabClasses } from '@mui/joy/Tab';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import Person from '@mui/icons-material/Person';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { Box } from '@mui/joy';
 import loadable from '@loadable/component'
 import './App.css';
@@ -91,7 +91,7 @@ const BottomNavigation = ({ currentIndex, onIndexChange }: BottomNavigationProps
         <ListItemDecorator>
           <HomeRoundedIcon />
         </ListItemDecorator>
-        Home
+        Dashboard
       </Tab>
       <Tab
         orientation="vertical"
@@ -100,16 +100,16 @@ const BottomNavigation = ({ currentIndex, onIndexChange }: BottomNavigationProps
         <ListItemDecorator>
           <ScheduleIcon />
         </ListItemDecorator>
-        Schedules
+        Penjadwalan
       </Tab>
       <Tab
         orientation="vertical"
         {...(currentIndex === 2 && { color: colors[2] })}
       >
         <ListItemDecorator>
-          <Person />
+          <SettingsIcon />
         </ListItemDecorator>
-        Profile
+        Pengaturan
       </Tab>
     </TabList>
   </Tabs>
