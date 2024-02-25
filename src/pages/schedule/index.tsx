@@ -44,6 +44,7 @@ const Schedule = () => {
 
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
     const [scheduleName, setScheduleName] = useState<string>("")
+    const [duration, setScheduleDuration] = useState<number>(0)
     const [scheduleDescription, setScheduleDescription] = useState<string>("")
     const [scheduleModeIndex, setScheduleModeIndex] = useState<number>(0)
     const [scheduleTime, setScheduleTime] = useState<Dayjs>(dayjs(new Date()))
@@ -87,7 +88,7 @@ const Schedule = () => {
     return (
         <>
             <Box sx={{ px: 2 }}>
-                <Typography sx={{ mt: 4 }} level="h2" fontWeight='500'>Schedules</Typography>
+                <Typography sx={{ mt: 4 }} level="h2" fontWeight='500'>Penjadwalan</Typography>
                 <Grid container direction='column' sx={{ mt: 2 }} gap={2} >
                     <Button
                         variant='solid'
@@ -95,8 +96,8 @@ const Schedule = () => {
                         color='primary'
                         startDecorator={<Add />}
                         onClick={() => setIsModalOpen(true)}
-                    >New Schedule</Button>
-                    {!upcomingSchedules?.length && <Typography color="neutral" fontSize='sm'>No upcoming schedules</Typography>}
+                    >Tambah Jadwal</Button>
+                    {!upcomingSchedules?.length && <Typography color="neutral" fontSize='sm'>Tidak ada Jadwal</Typography>}
                     {upcomingSchedules?.map((schedule) => (
                         <Card key={schedule.id} variant="soft">
                             <CardContent sx={{ gap: 1, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -108,19 +109,19 @@ const Schedule = () => {
                 </Grid >
             </Box>
             <Modal
-                title="Add Schedule"
+                title="Tambah Jadwal"
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 buttonActions={[
                     {
-                        label: 'Save',
+                        label: 'Simpan',
                         variant: 'solid',
                         color: 'primary',
                         loading: addScheduleMutation.isPending,
                         onClick: handleSaveSchedule,
                     },
                     {
-                        label: 'Cancel',
+                        label: 'Tutup',
                         variant: 'outlined',
                         color: 'danger',
                         onClick: () => setIsModalOpen(false)
@@ -128,8 +129,8 @@ const Schedule = () => {
                 ]}
             >
                 <Grid container direction='column' gap={2}>
-                    <Input value={scheduleName} onChange={e => setScheduleName(e.currentTarget.value)} variant="soft" size="md" placeholder="Schedule Name" />
-                    <Textarea value={scheduleDescription} onChange={e => setScheduleDescription(e.currentTarget.value)} variant="soft" size="md" minRows={2} placeholder="Description" />
+                    <Input value={scheduleName} onChange={e => setScheduleName(e.currentTarget.value)} variant="soft" size="md" placeholder="Nama Jadwal" />
+                    <Textarea value={scheduleDescription} onChange={e => setScheduleDescription(e.currentTarget.value)} variant="soft" size="md" minRows={2} placeholder="Deskripsi" />
                     <Tabs value={scheduleModeIndex} onChange={(_, val) => setScheduleModeIndex(val as number)} >
                         <TabList
                             disableUnderline
@@ -144,23 +145,24 @@ const Schedule = () => {
                                     bgcolor: 'background.surface',
                                 },
                             }}>
-                            <Tab disableIndicator>One Time</Tab>
-                            <Tab disableIndicator>Hourly</Tab>
-                            <Tab disableIndicator>Daily</Tab>
+                            <Tab disableIndicator sx={{ textAlign: 'center' }}>Sekali Waktu</Tab>
+                            <Tab disableIndicator sx={{ textAlign: 'center' }}>Setiap Jam</Tab>
+                            <Tab disableIndicator sx={{ textAlign: 'center' }}>Setiap Hari</Tab>
                         </TabList>
                     </Tabs>
                     <PickerComponent
                         value={scheduleTime}
                         onChange={date => setScheduleTime(date as Dayjs)}
                         format={`${scheduleModeTabMap[scheduleModeIndex] === SchedulerRecurringMode.NONE ? "DD-MM-YYYY " : ""}HH:mm`} // Show date for one time mode
-                        label="Schedule Time"
+                        label="Jadwal"
                         ampm={false}
                         viewRenderers={{
                             hours: renderTimeViewClock,
                             minutes: renderTimeViewClock,
                         }}
                     />
-                    <Typography fontWeight='500'>Actions</Typography>
+                    <Input value={duration} type="number" onChange={e => setScheduleDuration(Number(e.currentTarget.value))} variant="soft" size="md" placeholder="Durasi (Menit)" />
+                    <Typography fontWeight='500'>Aksi</Typography>
                     {actions.map((action, index) => (
                         <Card key={`action-${index + 1}`} variant="soft">
                             <Grid container direction='row' gap={1}>
@@ -174,7 +176,7 @@ const Schedule = () => {
                             </Grid>
                         </Card>
                     ))}
-                    <Button variant="soft" startDecorator={<Add />} color="primary" onClick={() => setActions(prev => ([...prev, { ...defaultAddActionRequest }]))}>Add Action</Button>
+                    <Button variant="soft" startDecorator={<Add />} color="primary" onClick={() => setActions(prev => ([...prev, { ...defaultAddActionRequest }]))}>Tambah Aksi</Button>
                 </Grid>
             </Modal>
         </>

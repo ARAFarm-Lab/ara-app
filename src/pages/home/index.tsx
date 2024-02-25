@@ -1,27 +1,41 @@
-import { Box, Card, Typography } from '@mui/joy'
+import { Box, Button, Card, Typography } from '@mui/joy'
 import './index.css'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import action from '@/apis/action'
 import report from '@/apis/report'
 import { QUERY_GET_SENSOR_REPORT } from '@/apis/report.keys'
 import { QUERY_KEY_GET_LAST_ACTION } from '@/apis/action.keys'
-import { ActionType } from '@/constants/action'
+import { ActionType, ActionTypeNames } from '@/constants/action'
 import {
     DispatchActionRequest,
     LastActionResponse
 } from '@/apis/action.types'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LineChart } from '@mui/x-charts/LineChart'
-import { SensorReport, SensorValue } from '@/apis/report.types'
+import { SensorReport } from '@/apis/report.types'
 import dayjs, { Dayjs } from 'dayjs'
 import { SensorType } from '@/constants/sensor'
+import FluorescentIcon from '@mui/icons-material/Fluorescent';
+import WaterDropIcon from '@mui/icons-material/WaterDrop';
+
+import icon from '@/assets/icon.png'
+
+const initialReportState = {
+    [SensorType.SoilMoisture]: {
+        data: [],
+        max_number: 0,
+        max_percentage: 0,
+        min_number: 0,
+        min_percentage: 0,
+    },
+}
 
 const Home = () => {
     const queryClient = useQueryClient()
-    const [reportData, setReportData] = useState<{ [key in SensorType]: SensorValue[] }>({
-        [SensorType.SoilMoisture]: [],
-    })
+    const [reportData, setReportData] = useState<{ [key in SensorType]: SensorReport }>(initialReportState)
     const [reportStartTime, setReportStartTime] = useState<Dayjs>(createDateHourDayJSNow().add(-1, "hour"))
+
+    const sensorReportCardRef = useRef<HTMLElement>()
 
     const builtInLEDQuery = useQuery<LastActionResponse>({
         queryKey: [QUERY_KEY_GET_LAST_ACTION, 1, ActionType.BuiltInLED],
@@ -45,7 +59,12 @@ const Home = () => {
 
     const builtInLEDMutation = useMutation({
         mutationFn: (request: DispatchActionRequest) => action.dispatchAction(request),
-        onSuccess: () => { queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_LAST_ACTION, 1, ActionType.BuiltInLED] }) }
+        onSuccess: () => { queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_LAST_ACTION, 1, ActionType.BuiltInLED] }) },
+        onMutate: async () => {
+            const key = [QUERY_KEY_GET_LAST_ACTION, 1, ActionType.BuiltInLED]
+            await queryClient.cancelQueries({ queryKey: key })
+            return !queryClient.getQueryData(key)
+        }
     })
 
     const relayMutation = useMutation({
@@ -76,99 +95,105 @@ const Home = () => {
 
     useEffect(() => {
         if (soilMoistureSensorReportQuery.isLoading) return
+        if (!soilMoistureSensorReportQuery.data?.data.length) return
         setReportData(prev => ({
             ...prev,
-            [SensorType.SoilMoisture]: appendReportData(prev[SensorType.SoilMoisture], soilMoistureSensorReportQuery.data?.data)
+            [SensorType.SoilMoisture]: appendReportData(prev[SensorType.SoilMoisture], soilMoistureSensorReportQuery?.data)
         }))
     }, [soilMoistureSensorReportQuery.data, soilMoistureSensorReportQuery.isLoading])
 
-    return <>
-        <Box sx={{ p: 2 }}>
-            <Typography fontSize="1.2rem" fontWeight='600'>{generateGreetingMessage()}</Typography>
-            <Typography fontSize="sm">Admin</Typography>
-        </Box>
-        <LineChart
-            xAxis={[{
-                dataKey: 'time',
-                scaleType: 'time',
-                min: new Date(reportData[SensorType.SoilMoisture][0]?.time),
-                max: new Date(reportData[SensorType.SoilMoisture][reportData[SensorType.SoilMoisture].length - 1]?.time),
-                valueFormatter: (date: Date) => dayjs(date).format("HH:mm"),
-            }]}
-            series={[
-                {
-                    dataKey: "value_percentage",
-                    label: "Percentage",
-                    showMark: false,
-                    area: true,
-                    color: '#7EC0EE'
-                },
-            ]}
-            yAxis={[{ label: '%' }]}
-            slotProps={{
-                legend: { hidden: true }
-            }}
-            // Need to parse the time to date object since LineChart can not accept string as input for the xAxis
-            dataset={reportData[SensorType.SoilMoisture].map(data => ({
-                ...data,
-                time: new Date(data.time),
-            }))}
-            height={200}
-        />
-        <Box sx={{ display: 'grid', gap: 2, margin: 2, gridTemplateColumns: '1fr 1fr' }}>
-            <ButtonCard title='Built In LED' isLoading={builtInLEDQuery.isFetching || builtInLEDMutation.isPending} onClick={() => mutateState(ActionType.BuiltInLED, !(builtInLEDState?.value as boolean))}>
-                <StatusChip on={builtInLEDState?.value as boolean} />
-                <Typography textColor='#aaa' fontStyle='italic' fontSize='.8em'>Last Update {convertTimeToFulldate(new Date(builtInLEDState?.action_at as string))}</Typography>
-            </ButtonCard>
-            <ButtonCard title='Solenoid Valve' isLoading={relayQuery.isFetching || relayMutation.isPending} onClick={() => mutateState(ActionType.Relay, !(relayState?.value as boolean))}>
-                <StatusChip on={relayState?.value as boolean} />
-                <Typography textColor='#aaa' fontStyle='italic' fontSize='.8em'>Last Update {convertTimeToFulldate(new Date(relayState?.action_at as string))}</Typography>
-            </ButtonCard>
-        </Box>
-    </>
-}
-
-
-const ButtonCard = ({ title, isLoading, children, onClick }: ButtonCardProps) => {
-    return <Card variant='soft' sx={{
-        cursor: 'pointer', userSelect: 'none', ":active": {
-            backgroundColor: "#f8f8f8",
-        }
-    }} onClick={isLoading ? undefined : onClick}>
-        {title && <Typography fontWeight='600'>{title}</Typography>}
-        {isLoading ? <p>Loading...</p> : (
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                {children}
+    return <Box sx={{ p: 2 }}>
+        <Card variant="solid" color='primary' sx={{ borderRadius: 16, gap: 0, p: 4, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+                <Typography textColor="common.white" fontSize="1.4rem" fontWeight='500'>{generateGreetingMessage()}</Typography>
+                <Typography textColor="common.white" fontSize="xs">Admin</Typography>
             </Box>
-        )}
-    </Card>
+            <img src={icon} width={80} height={80} />
+        </Card>
+        <Box sx={{ mt: 4, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography fontSize='1.2rem' fontWeight='600'>Dashboard</Typography>
+        </Box>
+        <Card sx={{ mt: 2, gap: 0, pt: 3, overflow: 'hidden' }} variant='soft'>
+            <Box ref={sensorReportCardRef}>
+                <Typography fontSize="1rem">Kelembapan Tanah</Typography>
+                <LineChart
+                    xAxis={[{
+                        dataKey: 'time',
+                        scaleType: 'time',
+                        min: new Date(reportData[SensorType.SoilMoisture].data[0]?.time),
+                        max: new Date(reportData[SensorType.SoilMoisture].data[reportData[SensorType.SoilMoisture].data.length - 1]?.time),
+                        valueFormatter: (date: Date) => dayjs(date).format("HH:mm"),
+                    }]}
+                    series={[
+                        {
+                            dataKey: "value_percentage",
+                            label: "Percentage",
+                            showMark: false,
+                            area: true,
+                            color: '#7EC0EE'
+                        },
+                    ]}
+                    slotProps={{
+                        legend: { hidden: true },
+                    }}
+                    // Need to parse the time to date object since LineChart can not accept string as input for the xAxis
+                    dataset={reportData[SensorType.SoilMoisture].data?.map(data => ({
+                        ...data,
+                        time: new Date(data.time),
+                    }))}
+                    height={180}
+                    margin={{
+                        bottom: 20,
+                        left: 30,
+                        right: 20,
+                        top: 20
+                    }}
+                    width={sensorReportCardRef?.current?.clientWidth || 0}
+                />
+            </Box>
+        </Card>
+        <Typography sx={{ mt: 4 }} fontSize='1.2rem' fontWeight='600'>Panel Kontrol</Typography>
+        <Box sx={{ display: 'grid', gap: 2, mt: 2, gridTemplateColumns: '1fr 1fr' }}>
+            <ButtonCard
+                title={ActionTypeNames[ActionType.BuiltInLED]}
+                Icon={FluorescentIcon}
+                on={builtInLEDState?.value || false}
+                isLoading={builtInLEDQuery.isFetching || builtInLEDMutation.isPending}
+                onClick={() => mutateState(ActionType.BuiltInLED, !(builtInLEDState?.value as boolean))} />
+            <ButtonCard
+                title={ActionTypeNames[ActionType.Relay]}
+                Icon={WaterDropIcon}
+                on={relayState?.value || false}
+                isLoading={relayQuery.isFetching || relayMutation.isPending}
+                onClick={() => mutateState(ActionType.Relay, !(relayState?.value as boolean))} />
+        </Box>
+        <Typography sx={{ mt: 4 }} fontSize='1.2rem' fontWeight='600'>History Kontrol</Typography>
+    </Box>
 }
-const StatusChip = ({ on }: { on: boolean }) => {
-    return <Card
-        variant='solid'
-        sx={{ p: 0.5, backgroundColor: on ? '#7EC0EE' : '#FF8C94', mb: 1 }}
-    >
-        <Typography textAlign='center' textColor='white'>{on ? 'ON' : 'OFF'}</Typography>
+
+
+const ButtonCard = ({ title, isLoading, on, Icon, onClick }: ButtonCardProps) => {
+    return <Card variant='solid' sx={{
+        cursor: 'pointer', userSelect: 'none',
+        background: '#48435C'
+    }} onClick={isLoading ? undefined : onClick}>
+        {title && <Typography fontWeight='600' textColor='common.white' sx={{ mb: 2 }}>{title}</Typography>}
+        <Icon sx={{ zIndex: 1, position: 'absolute', right: 20, opacity: .2 }} fontSize="large" />
+        <Button loading={isLoading} variant='solid' sx={{ zIndex: 2, mt: 'auto', p: 0.5, pointerEvents: 'none', backgroundColor: on ? '#2479ff' : '#ff4250', mb: 1 }}>
+            {on ? "ON" : "OFF"}
+        </Button>
     </Card>
 }
 
-const appendReportData = (prev: SensorValue[], data?: SensorValue[]): SensorValue[] => {
-    if (!data || !prev) {
+const appendReportData = (prev: SensorReport, report?: SensorReport): SensorReport => {
+    if (!report || !prev) {
         return prev
     }
-    return [...prev.slice(data.length), ...data]
+    return {
+        ...report,
+        data: [...prev.data.slice(report.data.length), ...report.data]
+    }
 }
-
-const convertTimeToFulldate = (time: Date) => {
-    const year = time.getFullYear()
-    const month = time.getMonth() + 1
-    const day = time.getDate()
-    const hours = time.getHours()
-    const minutes = time.getMinutes()
-    const seconds = time.getSeconds()
-    return `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day} ${hours < 10 ? '0' + hours : hours}:${minutes < 10 ? '0' + minutes : minutes}:${seconds < 10 ? '0' + seconds : seconds}`
-}
-
 const createDateHourDayJSNow = () => {
     return dayjs()
         .set("second", 0)
@@ -178,11 +203,11 @@ const generateGreetingMessage = () => {
     const date = new Date()
     const hours = date.getHours()
     if (hours >= 0 && hours < 12) {
-        return 'Good Morning'
+        return 'Selamat Pagi'
     } else if (hours >= 12 && hours < 18) {
-        return 'Good Afternoon'
+        return 'Selamat Siang'
     } else {
-        return 'Good Evening'
+        return 'Selamat Malam'
     }
 }
 
@@ -190,6 +215,8 @@ type ButtonCardProps = {
     title?: string
     isLoading?: boolean
     children?: React.ReactNode
+    on: boolean
+    Icon: any
     onClick?: () => void
 }
 

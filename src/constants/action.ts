@@ -4,8 +4,8 @@ export enum ActionType {
 }
 
 export const ActionTypeNames: { [key in ActionType]: string } = {
-    [ActionType.BuiltInLED]: 'Built In LED',
-    [ActionType.Relay]: 'Solenoid Valve',
+    [ActionType.BuiltInLED]: 'Lampu Alat',
+    [ActionType.Relay]: 'Kran Air',
 }
 
 type ActionTypeValue = {
@@ -15,10 +15,10 @@ type ActionTypeValue = {
 
 export const ActionTypeValues: { [key in ActionType]: ActionTypeValue[] } = {
     [ActionType.BuiltInLED]: [
-        { value: false, text: 'Off' }, { value: true, text: 'On' }
+        { value: false, text: 'Mati' }, { value: true, text: 'Nyala' }
     ],
     [ActionType.Relay]: [
-        { value: false, text: 'Off' }, { value: true, text: 'On' }
+        { value: false, text: 'Tutup' }, { value: true, text: 'Buka' }
     ],
 }
 
