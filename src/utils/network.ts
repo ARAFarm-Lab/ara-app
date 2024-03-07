@@ -21,14 +21,17 @@ const network = {
     get: async  <T>(endpoint: string, config?: any): Promise<T> => {
         return doRequest(endpoint, config)
     },
+    patch: async <T>(endpoint: string, body?: any): Promise<T> => {
+        return doRequest(endpoint, { method: 'PATCH', body })
+    },
     post: async <T>(endpoint: string, body?: any): Promise<T> => {
-        return doRequest(endpoint, { method: 'post', body })
+        return doRequest(endpoint, { method: 'POST', body })
     },
     put: async (endpoint: string, body?: any) => {
-        return doRequest(endpoint, { method: 'put', body })
+        return doRequest(endpoint, { method: 'PUT', body })
     },
     delete: async (endpoint: string) => {
-        return doRequest(endpoint, { method: 'delete' })
+        return doRequest(endpoint, { method: 'DELETE' })
     }
 }
 
