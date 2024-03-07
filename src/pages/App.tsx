@@ -5,7 +5,6 @@ import TabList from '@mui/joy/TabList';
 import Tab, { tabClasses } from '@mui/joy/Tab';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import ScheduleIcon from '@mui/icons-material/Schedule';
-import SettingsIcon from '@mui/icons-material/Settings';
 import { Box } from '@mui/joy';
 import loadable from '@loadable/component'
 import './App.css';
@@ -14,7 +13,6 @@ const colors = ['primary', 'danger', 'success', 'warning'] as const;
 const pages = [
   loadable(() => import('./home')),
   loadable(() => import('./schedule')),
-  loadable(() => import('./profile')),
 ]
 
 function App() {
@@ -101,15 +99,6 @@ const BottomNavigation = ({ currentIndex, onIndexChange }: BottomNavigationProps
           <ScheduleIcon />
         </ListItemDecorator>
         Penjadwalan
-      </Tab>
-      <Tab
-        orientation="vertical"
-        {...(currentIndex === 2 && { color: colors[2] })}
-      >
-        <ListItemDecorator>
-          <SettingsIcon />
-        </ListItemDecorator>
-        Pengaturan
       </Tab>
     </TabList>
   </Tabs>
