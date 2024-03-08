@@ -39,6 +39,28 @@ const defaultAddActionRequest = {
     value: ActionTypeValues[ActionType.BuiltInLED][0].value
 }
 
+const buildScheduleWording = (schedule: ScheduledTask): string => {
+    let wording = (() => {
+        const time = dayjs(schedule.scheduled_at)
+        switch (schedule.recurring_mode) {
+            case SchedulerRecurringMode.NONE:
+                return `Sekali waktu pada ${time.format(defaultDateTimeFormat)}`
+            case SchedulerRecurringMode.HOURLY:
+                return `Setiap jam pada menit ke ${time.format("mm")}`
+            case SchedulerRecurringMode.DAILY:
+                return `Setiap hari pada pukul ${time.format("HH:mm")}`
+            default:
+                return "Jadwal tidak valid"
+        }
+    })()
+
+    if (schedule.duration || 0 > 0) {
+        wording += `, durasi ${schedule.duration} menit`
+    }
+
+    return wording
+}
+
 const Schedule = () => {
     const queryClient = useQueryClient()
     const upcomingSchedulesQuery = useQuery({
@@ -176,7 +198,7 @@ const Schedule = () => {
                             <Grid container width='100%' justifyContent='space-between'>
                                 <Box>
                                     <Typography sx={{ m: 0 }} fontWeight='600'>{schedule.name}</Typography>
-                                    <Typography color="primary" fontSize='sm'>{dayjs(schedule.scheduled_at).format(defaultDateTimeFormat)}</Typography>
+                                    <Typography color="primary" fontSize='sm'>{dayjs(schedule.next_run_at).format(defaultDateTimeFormat)}</Typography>
                                 </Box>
                                 <ExpandMore
                                     expand={expandedSchedule.id === schedule.id}
@@ -191,8 +213,13 @@ const Schedule = () => {
                                         <Typography fontSize='sm'>{schedule.description}</Typography>
                                     </Box>
                                     <Box sx={{ mt: 2 }}>
+                                        <Typography fontSize='sm' fontWeight={600}>Jadwal</Typography>
+                                        <Typography fontSize='sm'>{buildScheduleWording(schedule)}</Typography>
+                                    </Box>
+                                    <Box sx={{ mt: 2 }}>
                                         <Typography fontSize='sm' fontWeight={600}>Waktu Eksekusi Terakhir</Typography>
-                                        <Typography fontSize='sm'>{dayjs(schedule.last_run_at).format(defaultDateTimeFormat)}</Typography>
+                                        <Typography fontSize='sm'>{schedule.last_run_at != "0001-01-01T00:00:00Z"
+                                            ? dayjs(schedule.last_run_at).format(defaultDateTimeFormat) : "-"}</Typography>
                                     </Box>
                                     <Box sx={{ mt: 2 }}>
                                         <Typography fontSize='sm' fontWeight={600}>Status Terakhir</Typography>

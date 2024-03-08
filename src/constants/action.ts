@@ -11,6 +11,7 @@ export enum ActionType {
 
 
 export enum ScheduleStatus {
+    NotFound = 0,
     Pending = 1,
     Running = 2,
     Success = 3,
@@ -18,6 +19,7 @@ export enum ScheduleStatus {
 }
 
 export const ScheduleStatusNames: { [key in ScheduleStatus]: string } = {
+    [ScheduleStatus.NotFound]: "-",
     [ScheduleStatus.Pending]: "Menunggu Eksekusi",
     [ScheduleStatus.Running]: "Berjalan",
     [ScheduleStatus.Success]: "Sukses",
