@@ -1,22 +1,20 @@
 import { Box, Button, Card, Chip, Grid, Typography } from '@mui/joy'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import action from '@/apis/action'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
+import actionAPI from '@/apis/action'
 import report from '@/apis/report'
 import { QUERY_GET_SENSOR_REPORT } from '@/apis/report.keys'
-import { QUERY_KEY_GET_ACTION_HISTORIES, QUERY_KEY_GET_LAST_ACTION } from '@/apis/action.keys'
-import { ActionSource, ActionType, ActionTypeNames, ActionTypeValues } from '@/constants/action'
+import { QUERY_KEY_GET_ACTIONS, QUERY_KEY_GET_ACTION_HISTORIES, QUERY_KEY_GET_ACTION_VALUE } from '@/apis/action.keys'
+import { ActionSource, getActionIcon, getActionValueText } from '@/constants/action'
 import {
+    Action,
     ActionHistory,
     DispatchActionRequest,
-    LastActionResponse
 } from '@/apis/action.types'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { LineChart } from '@mui/x-charts/LineChart'
 import { SensorReport } from '@/apis/report.types'
 import dayjs, { Dayjs } from 'dayjs'
 import { SensorType } from '@/constants/sensor'
-import FluorescentIcon from '@mui/icons-material/Fluorescent';
-import WaterDropIcon from '@mui/icons-material/WaterDrop';
 
 import icon from '@/assets/icon.png'
 import { defaultDateTimeFormat } from '@/constants/date'
@@ -31,11 +29,6 @@ const initialReportState = {
     },
 }
 
-const actionIconMap: ({ [key in ActionType]: any }) = {
-    [ActionType.BuiltInLED]: FluorescentIcon,
-    [ActionType.Relay]: WaterDropIcon
-}
-
 const actionSourceNameMap: ({ [key in ActionSource]: string }) = {
     [ActionSource.User]: "User",
     [ActionSource.Scheduler]: "Otomatis oleh Sistem",
@@ -45,18 +38,34 @@ const actionSourceNameMap: ({ [key in ActionSource]: string }) = {
 const Home = () => {
     const queryClient = useQueryClient()
     const [reportData, setReportData] = useState<{ [key in SensorType]: SensorReport }>(initialReportState)
+    const [mutationLoading, setMutationLoading] = useState<{ [key: string]: boolean }>({})
     const [reportStartTime, setReportStartTime] = useState<Dayjs>(createDateHourDayJSNow().add(-1, "hour"))
-
     const sensorReportCardRef = useRef<HTMLElement>()
 
-    const builtInLEDQuery = useQuery<LastActionResponse>({
-        queryKey: [QUERY_KEY_GET_LAST_ACTION, 1, ActionType.BuiltInLED],
-        queryFn: () => action.getLastAction(1, ActionType.BuiltInLED),
+    const actions = useQuery<Action[]>({
+        queryKey: [QUERY_KEY_GET_ACTIONS],
+        queryFn: () => actionAPI.getActions(1)
     })
 
-    const relayQuery = useQuery<LastActionResponse>({
-        queryKey: [QUERY_KEY_GET_LAST_ACTION, 1, ActionType.Relay],
-        queryFn: () => action.getLastAction(1, ActionType.Relay),
+    const actionStates = useQueries({
+        queries: actions.data?.map(action => ({
+            queryKey: [QUERY_KEY_GET_ACTION_VALUE, 1, action.id],
+            queryFn: () => actionAPI.getActionValue(1, action.id)
+        })) || []
+    })
+
+    const actionMutation = useMutation({
+        mutationFn: (request: DispatchActionRequest) => actionAPI.dispatchAction(request),
+        onMutate: async (request) => {
+            setMutationLoading(prev => ({ ...prev, [request.actuator_id]: true }))
+            await queryClient.cancelQueries({ queryKey: [QUERY_KEY_GET_ACTION_VALUE, 1, request.actuator_id] })
+            return !queryClient.getQueryData([QUERY_KEY_GET_ACTION_VALUE, 1, request.actuator_id])
+        },
+        onSuccess: (_, request) => {
+            queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_ACTION_VALUE, 1, request.actuator_id] })
+            queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_ACTION_HISTORIES] })
+            setMutationLoading(prev => ({ ...prev, [request.actuator_id]: false }))
+        }
     })
 
     const soilMoistureSensorReportQuery = useQuery<SensorReport>({
@@ -71,46 +80,17 @@ const Home = () => {
 
     const actionHistoriesQuery = useQuery<ActionHistory[]>({
         queryKey: [QUERY_KEY_GET_ACTION_HISTORIES],
-        queryFn: () => action.getActionHistories(1)
+        queryFn: () => actionAPI.getActionHistories(1)
     })
 
-    const builtInLEDMutation = useMutation({
-        mutationFn: (request: DispatchActionRequest) => action.dispatchAction(request),
-        onMutate: async () => {
-            const key = [QUERY_KEY_GET_LAST_ACTION, 1, ActionType.BuiltInLED]
-            await queryClient.cancelQueries({ queryKey: key })
-            return !queryClient.getQueryData(key)
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_LAST_ACTION, 1, ActionType.BuiltInLED] })
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_ACTION_HISTORIES] })
-        },
-    })
 
-    const relayMutation = useMutation({
-        mutationFn: (request: DispatchActionRequest) => action.dispatchAction(request),
-        onMutate: async () => {
-            const key = [QUERY_KEY_GET_LAST_ACTION, 1, ActionType.Relay]
-            await queryClient.cancelQueries({ queryKey: key })
-            return !queryClient.getQueryData(key)
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_LAST_ACTION, 1, ActionType.Relay] })
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_ACTION_HISTORIES] })
-        }
-    })
-
-    const builtInLEDState = useMemo(() => builtInLEDQuery.data, [builtInLEDQuery.data])
-    const relayState = useMemo(() => relayQuery.data, [relayQuery.data])
-
-    const mutateState = (actionType: ActionType, state: boolean) => {
-        const mutator = actionType === ActionType.BuiltInLED ? builtInLEDMutation : relayMutation
+    const mutateState = (actuator_id: number, state: boolean) => {
         const request: DispatchActionRequest = {
-            action_type: actionType,
+            actuator_id,
             device_id: 1,
             value: state,
         }
-        mutator.mutate(request)
+        actionMutation.mutate(request)
     }
 
     useEffect(() => {
@@ -182,43 +162,38 @@ const Home = () => {
         </Card>
         <Typography sx={{ mt: 4 }} fontSize='1.2rem' fontWeight='600'>Panel Kontrol</Typography>
         <Box sx={{ display: 'grid', gap: 2, mt: 2, gridTemplateColumns: '1fr 1fr' }}>
-            <ButtonCard
-                title={ActionTypeNames[ActionType.BuiltInLED]}
-                Icon={actionIconMap[ActionType.BuiltInLED]}
-                on={builtInLEDState?.value || false}
-                onText={ActionTypeValues[ActionType.BuiltInLED].find(v => v.value)?.text || "On"}
-                offText={ActionTypeValues[ActionType.BuiltInLED].find(v => !v.value)?.text || "Off"}
-                isLoading={builtInLEDQuery.isFetching || builtInLEDMutation.isPending}
-                onClick={() => mutateState(ActionType.BuiltInLED, !(builtInLEDState?.value as boolean))} />
-            <ButtonCard
-                title={ActionTypeNames[ActionType.Relay]}
-                Icon={actionIconMap[ActionType.Relay]}
-                on={relayState?.value || false}
-                onText={ActionTypeValues[ActionType.Relay].find(v => v.value == true)?.text || "On"}
-                offText={ActionTypeValues[ActionType.Relay].find(v => !v.value)?.text || "Off"}
-                isLoading={relayQuery.isFetching || relayMutation.isPending}
-                onClick={() => mutateState(ActionType.Relay, !(relayState?.value as boolean))} />
+            {(actions.data?.length || 0) > 0 && actions.data?.map((action, index) => {
+                const state = actionStates[index]
+                return <ButtonCard
+                    key={index}
+                    id={index}
+                    title={action.name}
+                    Icon={getActionIcon(action.icon)}
+                    on={state.data?.value || false}
+                    onText={getActionValueText(action.type, true)}
+                    offText={getActionValueText(action.type, false)}
+                    isLoading={state?.isLoading || mutationLoading[action.id]}
+                    onClick={() => mutateState(action.id, !state.data?.value)} />
+            })}
         </Box>
         <Box sx={{ mt: 0 }}>
             <Typography sx={{ mt: 4 }} fontSize='1.2rem' fontWeight='600'>Riwayat Kontrol</Typography>
             {!actionHistoriesQuery.isLoading && (
                 <Grid container direction='column' sx={{ mt: 2 }} gap={2}>
                     {actionHistoriesQuery.data?.map(history => {
-                        const Icon = actionIconMap[history.action_type]
+                        const Icon = getActionIcon(history.action.icon)
                         return (
-                            <Card>
+                            <Card key={`${history.action.id}-${history.action_at}`}>
                                 <Grid container justifyContent='space-between'>
-                                    {/* Left section */}
                                     <Grid container alignItems='center' gap={2}>
                                         <Icon />
                                         <Grid>
-                                            <Typography fontSize='sm' fontWeight='600'>{ActionTypeNames[history.action_type]}</Typography>
+                                            <Typography fontSize='sm' fontWeight='600'>{history.action.name}</Typography>
                                             <Chip color={history.value ? 'success' : 'danger'} size='sm' variant='solid' sx={{
                                                 "--Chip-paddingInline": "1em"
-                                            }}>{ActionTypeValues[history.action_type].find(v => v.value == history.value)?.text}</Chip>
+                                            }}>{getActionValueText(history.action.type, history.value)}</Chip>
                                         </Grid>
                                     </Grid>
-                                    {/* Right Section */}
                                     <Grid container direction='column' alignItems='flex-end'>
                                         <Typography fontSize='sm' textColor={'primary.600'} fontWeight='600'>{dayjs(history.action_at).format(defaultDateTimeFormat)}</Typography>
                                         <Typography fontSize='sm'>{actionSourceNameMap[history.action_by]}</Typography>
@@ -234,8 +209,9 @@ const Home = () => {
 }
 
 
-const ButtonCard = ({ title, isLoading, on, Icon, onClick, onText, offText }: ButtonCardProps) => {
-    return <Card variant='solid' sx={{
+const ButtonCard = (props: ButtonCardProps) => {
+    const { title, isLoading, on, Icon, onClick, onText, offText } = props
+    return <Card key={props.id} variant='solid' sx={{
         cursor: 'pointer', userSelect: 'none',
         background: '#48435C'
     }} onClick={isLoading ? undefined : onClick}>
@@ -274,6 +250,7 @@ const generateGreetingMessage = () => {
 }
 
 type ButtonCardProps = {
+    id: number,
     title?: string
     isLoading?: boolean
     children?: React.ReactNode
