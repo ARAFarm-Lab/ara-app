@@ -6,7 +6,7 @@ export type CreateSchedulerRequest = {
     name: string
     description: string
     duration: number | null
-    actions: DispatchActionRequest[]
+    actions: DispatchActionRequest[],
     scheduled_at: string
     recurring_mode: SchedulerRecurringMode,
 }
@@ -14,5 +14,7 @@ export type CreateSchedulerRequest = {
 export type ScheduledTask = CreateSchedulerRequest & {
     id: number
     last_run_status: ScheduleStatus,
-    last_run_at: string
+    last_run_at: string,
+    is_upcoming_run_cleanup: boolean,
+    cleanup_time: string | null,
 }
