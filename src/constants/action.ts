@@ -1,5 +1,8 @@
 import FluorescentIcon from '@mui/icons-material/Fluorescent';
 import WaterDropIcon from '@mui/icons-material/WaterDrop';
+import WbIncandescentIcon from '@mui/icons-material/WbIncandescent';
+import BoltIcon from '@mui/icons-material/Bolt';
+import ForestIcon from '@mui/icons-material/Forest';
 
 export enum ActionSource {
     User = 1,
@@ -21,12 +24,18 @@ export enum ScheduleStatus {
 
 export enum ActionIcon {
     Water = "icon-water",
-    Lamp = "icon-lamp"
+    LED = "icon-led",
+    Lamp = "icon-lamp",
+    Electric = "icon-electric",
+    Trees = "icon-trees"
 }
 
 const actionIconMap: ({ [key in ActionIcon]: any }) = {
     [ActionIcon.Water]: WaterDropIcon,
-    [ActionIcon.Lamp]: FluorescentIcon
+    [ActionIcon.LED]: FluorescentIcon,
+    [ActionIcon.Lamp]: WbIncandescentIcon,
+    [ActionIcon.Electric]: BoltIcon,
+    [ActionIcon.Trees]: ForestIcon
 }
 
 export const getActionIcon = (icon: ActionIcon) => actionIconMap[icon] || WaterDropIcon

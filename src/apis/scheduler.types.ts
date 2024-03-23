@@ -15,6 +15,5 @@ export type ScheduledTask = CreateSchedulerRequest & {
     id: number
     last_run_status: ScheduleStatus,
     last_run_at: string,
-    is_upcoming_run_cleanup: boolean,
-    cleanup_time: string | null,
+    next_run_at: string
 }

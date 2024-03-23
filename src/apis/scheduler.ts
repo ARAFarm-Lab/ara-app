@@ -10,5 +10,7 @@ export default {
     createSchedule,
     deleteSchedule,
     getUpcomingSchedules,
-    updateSchedule
+    updateSchedule,
+
+    QUERY_KEY_GET_UPCOMING_SCHEDULES: 'getUpcomingSchedules'
 }
