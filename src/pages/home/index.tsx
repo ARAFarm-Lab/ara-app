@@ -1,9 +1,7 @@
-import { Box, Button, Card, Chip, Grid, Typography } from '@mui/joy'
+import { Box, Button, Card, Chip, CircularProgress, Grid, LinearProgress, Typography } from '@mui/joy'
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import actionAPI from '@/apis/action'
-import report from '@/apis/report'
-import { QUERY_GET_SENSOR_REPORT } from '@/apis/report.keys'
-import { QUERY_KEY_GET_ACTIONS, QUERY_KEY_GET_ACTION_HISTORIES, QUERY_KEY_GET_ACTION_VALUE } from '@/apis/action.keys'
+import reportAPI from '@/apis/report'
 import { ActionSource, getActionIcon, getActionValueText } from '@/constants/action'
 import {
     Action,
@@ -43,13 +41,13 @@ const Home = () => {
     const sensorReportCardRef = useRef<HTMLElement>()
 
     const actions = useQuery<Action[]>({
-        queryKey: [QUERY_KEY_GET_ACTIONS],
+        queryKey: [actionAPI.QUERY_KEY_GET_ACTIONS],
         queryFn: () => actionAPI.getActions(1)
     })
 
     const actionStates = useQueries({
         queries: actions.data?.map(action => ({
-            queryKey: [QUERY_KEY_GET_ACTION_VALUE, 1, action.id],
+            queryKey: [actionAPI.QUERY_KEY_GET_ACTION_VALUE, 1, action.id],
             queryFn: () => actionAPI.getActionValue(1, action.id)
         })) || []
     })
@@ -58,19 +56,19 @@ const Home = () => {
         mutationFn: (request: DispatchActionRequest) => actionAPI.dispatchAction(request),
         onMutate: async (request) => {
             setMutationLoading(prev => ({ ...prev, [request.actuator_id]: true }))
-            await queryClient.cancelQueries({ queryKey: [QUERY_KEY_GET_ACTION_VALUE, 1, request.actuator_id] })
-            return !queryClient.getQueryData([QUERY_KEY_GET_ACTION_VALUE, 1, request.actuator_id])
+            await queryClient.cancelQueries({ queryKey: [actionAPI.QUERY_KEY_GET_ACTION_VALUE, 1, request.actuator_id] })
+            return !queryClient.getQueryData([actionAPI.QUERY_KEY_GET_ACTION_VALUE, 1, request.actuator_id])
         },
         onSuccess: (_, request) => {
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_ACTION_VALUE, 1, request.actuator_id] })
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_ACTION_HISTORIES] })
+            queryClient.invalidateQueries({ queryKey: [actionAPI.QUERY_KEY_GET_ACTION_VALUE, 1, request.actuator_id] })
+            queryClient.invalidateQueries({ queryKey: [actionAPI.QUERY_KEY_GET_ACTION_HISTORIES] })
             setMutationLoading(prev => ({ ...prev, [request.actuator_id]: false }))
         }
     })
 
     const soilMoistureSensorReportQuery = useQuery<SensorReport>({
-        queryKey: [QUERY_GET_SENSOR_REPORT, reportStartTime.format()],
-        queryFn: () => report.getSensorReport({
+        queryKey: [reportAPI.QUERY_GET_SENSOR_REPORT, reportStartTime.format()],
+        queryFn: () => reportAPI.getSensorReport({
             start_time: reportStartTime.format(),
             end_time: createDateHourDayJSNow().format(),
             device_id: 1,
@@ -79,7 +77,7 @@ const Home = () => {
     })
 
     const actionHistoriesQuery = useQuery<ActionHistory[]>({
-        queryKey: [QUERY_KEY_GET_ACTION_HISTORIES],
+        queryKey: [actionAPI.QUERY_KEY_GET_ACTION_HISTORIES],
         queryFn: () => actionAPI.getActionHistories(1)
     })
 
@@ -124,43 +122,50 @@ const Home = () => {
         <Card sx={{ mt: 2, gap: 0, pt: 3, overflow: 'hidden' }} variant='soft'>
             <Box ref={sensorReportCardRef}>
                 <Typography fontSize="1rem">Kelembapan Tanah</Typography>
-                <LineChart
-                    xAxis={[{
-                        dataKey: 'time',
-                        scaleType: 'time',
-                        min: new Date(reportData[SensorType.SoilMoisture].data[0]?.time),
-                        max: new Date(reportData[SensorType.SoilMoisture].data[reportData[SensorType.SoilMoisture].data.length - 1]?.time),
-                        valueFormatter: (date: Date) => dayjs(date).format("HH:mm"),
-                    }]}
-                    series={[
-                        {
-                            dataKey: "value_percentage",
-                            label: "Percentage",
-                            showMark: false,
-                            area: true,
-                            color: '#7EC0EE'
-                        },
-                    ]}
-                    slotProps={{
-                        legend: { hidden: true },
-                    }}
-                    // Need to parse the time to date object since LineChart can not accept string as input for the xAxis
-                    dataset={reportData[SensorType.SoilMoisture].data?.map(data => ({
-                        ...data,
-                        time: new Date(data.time),
-                    }))}
-                    height={180}
-                    margin={{
-                        bottom: 20,
-                        left: 30,
-                        right: 20,
-                        top: 20
-                    }}
-                    width={sensorReportCardRef?.current?.clientWidth || 0}
-                />
+                {soilMoistureSensorReportQuery.isLoading ? (
+                    <Grid container justifyContent='center'>
+                        <CircularProgress />
+                    </Grid>
+                ) : (
+                    <LineChart
+                        xAxis={[{
+                            dataKey: 'time',
+                            scaleType: 'time',
+                            min: new Date(reportData[SensorType.SoilMoisture].data[0]?.time),
+                            max: new Date(reportData[SensorType.SoilMoisture].data[reportData[SensorType.SoilMoisture].data.length - 1]?.time),
+                            valueFormatter: (date: Date) => dayjs(date).format("HH:mm"),
+                        }]}
+                        series={[
+                            {
+                                dataKey: "value_percentage",
+                                label: "Percentage",
+                                showMark: false,
+                                area: true,
+                                color: '#7EC0EE'
+                            },
+                        ]}
+                        slotProps={{
+                            legend: { hidden: true },
+                        }}
+                        // Need to parse the time to date object since LineChart can not accept string as input for the xAxis
+                        dataset={reportData[SensorType.SoilMoisture].data?.map(data => ({
+                            ...data,
+                            time: new Date(data.time),
+                        }))}
+                        height={180}
+                        margin={{
+                            bottom: 20,
+                            left: 30,
+                            right: 20,
+                            top: 20
+                        }}
+                        width={sensorReportCardRef?.current?.clientWidth || 0}
+                    />
+                )}
             </Box>
         </Card>
         <Typography sx={{ mt: 4 }} fontSize='1.2rem' fontWeight='600'>Panel Kontrol</Typography>
+        {actions.isLoading && <LinearProgress sx={{ mt: 2 }} />}
         <Box sx={{ display: 'grid', gap: 2, mt: 2, gridTemplateColumns: '1fr 1fr' }}>
             {(actions.data?.length || 0) > 0 && actions.data?.map((action, index) => {
                 const state = actionStates[index]
@@ -178,7 +183,7 @@ const Home = () => {
         </Box>
         <Box sx={{ mt: 0 }}>
             <Typography sx={{ mt: 4 }} fontSize='1.2rem' fontWeight='600'>Riwayat Kontrol</Typography>
-            {!actionHistoriesQuery.isLoading && (
+            {actionHistoriesQuery.isLoading ? <LinearProgress sx={{ mt: 2 }} /> : (
                 <Grid container direction='column' sx={{ mt: 2 }} gap={2}>
                     {actionHistoriesQuery.data?.map(history => {
                         const Icon = getActionIcon(history.action.icon)

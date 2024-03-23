@@ -15,5 +15,9 @@ export default {
     dispatchAction,
     getActions,
     getActionHistories,
-    getActionValue
+    getActionValue,
+
+    QUERY_KEY_GET_ACTIONS: "getActions",
+    QUERY_KEY_GET_ACTION_VALUE: "getActionValue",
+    QUERY_KEY_GET_ACTION_HISTORIES: "getActionHistories"
 }

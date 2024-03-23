@@ -1,13 +1,12 @@
 import { Action, DispatchActionRequest } from "@/apis/action.types";
 import schedulerAPI from '@/apis/scheduler';
-import { QUERY_KEY_GET_UPCOMING_SCHEDULES } from "@/apis/scheduler.keys";
 import { CreateSchedulerRequest, ScheduledTask } from "@/apis/scheduler.types";
 import { ActionType, ActionTypeValues, ScheduleStatusNames } from "@/constants/action";
 import { SchedulerRecurringMode } from "@/constants/scheduler";
 import { styled } from '@mui/material/styles';
 import Add from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Box, Button, Card, CardContent, Grid, Option, Select, Tab, TabList, Tabs, Typography, tabClasses } from "@mui/joy";
+import { Box, Button, Card, CardContent, Grid, LinearProgress, Option, Select, Tab, TabList, Tabs, Typography, tabClasses } from "@mui/joy";
 import { TimePicker } from "@mui/x-date-pickers";
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
@@ -21,7 +20,6 @@ import IconButton, { IconButtonProps } from '@mui/joy/IconButton';
 import { defaultDateTimeFormat } from "@/constants/date";
 import ConfirmationDialog from "../../components/confirmation-dialog"
 
-import { QUERY_KEY_GET_ACTIONS } from "@/apis/action.keys";
 import actionAPI from "@/apis/action"
 
 const scheduleModeTabMap: { [key: number]: SchedulerRecurringMode } = {
@@ -41,19 +39,19 @@ const generateDefaultDateTime = () => dayjs(new Date()).add(1, 'minute')
 const Schedule = () => {
     const queryClient = useQueryClient()
     const upcomingSchedulesQuery = useQuery({
-        queryKey: [QUERY_KEY_GET_UPCOMING_SCHEDULES, 1],
+        queryKey: [schedulerAPI.QUERY_KEY_GET_UPCOMING_SCHEDULES, 1],
         queryFn: schedulerAPI.getUpcomingSchedules
     })
 
     const availableActions = useQuery({
-        queryKey: [QUERY_KEY_GET_ACTIONS, 1],
+        queryKey: [actionAPI.QUERY_KEY_GET_ACTIONS, 1],
         queryFn: () => actionAPI.getActions(1)
     })
 
     const addScheduleMutation = useMutation({
         mutationFn: (request: CreateSchedulerRequest) => schedulerAPI.createSchedule(request),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_UPCOMING_SCHEDULES, 1] })
+            queryClient.invalidateQueries({ queryKey: [schedulerAPI.QUERY_KEY_GET_UPCOMING_SCHEDULES, 1] })
             setIsAddModalOpen(false)
         },
     })
@@ -61,7 +59,7 @@ const Schedule = () => {
     const deleteScheduleMutation = useMutation({
         mutationFn: (id: number) => schedulerAPI.deleteSchedule(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_UPCOMING_SCHEDULES, 1] })
+            queryClient.invalidateQueries({ queryKey: [schedulerAPI.QUERY_KEY_GET_UPCOMING_SCHEDULES, 1] })
             setIsDeleteConfirmationOpen(false)
         },
     })
@@ -69,7 +67,7 @@ const Schedule = () => {
     const updateScheduleMutation = useMutation({
         mutationFn: (schedule: ScheduledTask) => schedulerAPI.updateSchedule(schedule),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEY_GET_UPCOMING_SCHEDULES, 1] })
+            queryClient.invalidateQueries({ queryKey: [schedulerAPI.QUERY_KEY_GET_UPCOMING_SCHEDULES, 1] })
             setIsAddModalOpen(false)
             setExpandedSchedule({
                 id: -1,
@@ -199,13 +197,14 @@ const Schedule = () => {
                         startDecorator={<Add />}
                         onClick={handleAddNewSchedule}
                     >Tambah Jadwal</Button>
-                    {!upcomingSchedules?.length && <Typography color="neutral" fontSize='sm'>Tidak ada Jadwal</Typography>}
+                    {upcomingSchedulesQuery.isLoading && <LinearProgress />}
+                    {!upcomingSchedulesQuery.isLoading && !upcomingSchedules?.length && <Typography color="neutral" fontSize='sm'>Tidak ada Jadwal</Typography>}
                     {upcomingSchedules?.map((schedule) => (
                         <Card key={schedule.id} variant="soft">
                             <Grid container width='100%' justifyContent='space-between'>
                                 <Box>
                                     <Typography sx={{ m: 0 }} fontWeight='600'>{schedule.name}</Typography>
-                                    <Typography color="primary" fontSize='sm'>{dayjs(schedule.is_upcoming_run_cleanup ? schedule.cleanup_time : schedule.scheduled_at).format(defaultDateTimeFormat)}</Typography>
+                                    <Typography color="primary" fontSize='sm'>{dayjs(schedule.next_run_at).format(defaultDateTimeFormat)}</Typography>
                                 </Box>
                                 <ExpandMore
                                     expand={expandedSchedule.id === schedule.id}
