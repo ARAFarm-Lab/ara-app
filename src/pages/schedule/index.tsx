@@ -285,7 +285,7 @@ const Schedule = () => {
                             </TabList>
                         </Tabs>
                         <PickerComponent
-                            disablePast
+                            disablePast={scheduleModeTabMap[scheduleModeIndex] == SchedulerRecurringMode.NONE}
                             value={scheduleTime}
                             onChange={date => setScheduleTime(date as Dayjs)}
                             format={`${scheduleModeTabMap[scheduleModeIndex] === SchedulerRecurringMode.NONE ? "DD-MM-YYYY " : ""}HH:mm`} // Show date for one time mode
