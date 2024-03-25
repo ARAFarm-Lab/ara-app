@@ -5,5 +5,6 @@ export type Actuator = {
     pin_number: number,
     action_type: ActionType,
     name: string,
+    terminal_number: number,
     icon: ActionIcon
 }
