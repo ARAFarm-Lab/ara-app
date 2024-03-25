@@ -6,7 +6,7 @@ import Tab, { tabClasses } from '@mui/joy/Tab';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import SettingIcon from '@mui/icons-material/Settings';
-import { Box } from '@mui/joy';
+import { Box, LinearProgress } from '@mui/joy';
 import loadable from '@loadable/component'
 import './App.css';
 
@@ -48,7 +48,7 @@ function App() {
 const Page = ({ index }: { index: number }) => {
   const Page = pages[index]
   return <Box key={index} sx={{ pb: 2 }} className='fade'>
-    <Page />
+    <Page fallback={<LinearProgress />} />
   </Box>
 }
 

@@ -44,6 +44,7 @@ const Setting = () => {
                                 </Box>
                             </Box>
                             <Typography>{item.name}</Typography>
+                            <Typography sx={{ ml: 'auto' }} level="h4" fontWeight='400' textColor="#999">{item.terminal_number}</Typography>
                         </Grid>
                     </Card>
                 })}
