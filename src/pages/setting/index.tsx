@@ -1,4 +1,4 @@
-import { Box, Card, Chip, Grid, LinearProgress, Option, Select, Typography } from "@mui/joy"
+import { Box, Card, Chip, Grid, LinearProgress, Select, Option, Typography } from "@mui/joy"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import settingAPI from '@/apis/setting'
 import { ActionIcon, getActionIcon } from "@/constants/action"
@@ -75,7 +75,10 @@ const Setting = () => {
             ]}
         >
             <Grid container gap={2} flexDirection='column'>
-                <Grid container gap={2}>
+                <Grid flexGrow={1}>
+                    <TextField sx={{ width: '100%' }} size="small" label="Nama" value={selectedPanel?.name || ""} onChange={e => setSelectedPanel({ ...(selectedPanel as Actuator), name: e.target.value })} />
+                </Grid>
+                <Grid container justifyContent='space-between' gap={2}>
                     <Select
                         value={selectedPanel?.icon || ""}
                         onChange={(_, val) => {
@@ -95,16 +98,14 @@ const Setting = () => {
                             return <Option key={icon} value={icon}><Icon /></Option>
                         })}
                     </Select>
-                    <Grid flexGrow={1}>
-                        <TextField sx={{ width: '100%' }} size="small" label="Nama" value={selectedPanel?.name || ""} onChange={e => setSelectedPanel({ ...(selectedPanel as Actuator), name: e.target.value })} />
-                    </Grid>
+                    <Select
+                    
+                        value={selectedPanel?.is_active || false}
+                        onChange={(_, val) => setSelectedPanel(({ ...(selectedPanel as Actuator), is_active: val || false }))}
+                    >
+                        {[true, false].map(item => <Option key={item.toString()} value={item}>{item ? "Aktif" : "Non Aktif"}</Option>)}
+                    </Select>
                 </Grid>
-                <Select
-                    value={selectedPanel?.is_active || false}
-                    onChange={(_, val) => setSelectedPanel(({ ...(selectedPanel as Actuator), is_active: val || false }))}
-                >
-                    {[true, false].map(item => <Option key={item.toString()} value={item}>{item ? "Aktif" : "Non Aktif"}</Option>)}
-                </Select>
             </Grid>
         </Modal >
     </>

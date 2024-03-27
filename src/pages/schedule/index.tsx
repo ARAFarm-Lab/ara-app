@@ -21,6 +21,7 @@ import { defaultDateTimeFormat } from "@/constants/date";
 import ConfirmationDialog from "../../components/confirmation-dialog"
 
 import actionAPI from "@/apis/action"
+import settingAPI from "@/apis/setting"
 
 const scheduleModeTabMap: { [key: number]: SchedulerRecurringMode } = {
     0: SchedulerRecurringMode.NONE,
@@ -46,6 +47,11 @@ const Schedule = () => {
     const availableActions = useQuery({
         queryKey: [actionAPI.QUERY_KEY_GET_ACTIONS, 1],
         queryFn: () => actionAPI.getActions(1)
+    })
+
+    const actuators = useQuery({
+        queryKey: [settingAPI.QUERY_KEY_GET_ACTUATORS, 1],
+        queryFn: () => settingAPI.getActuators(1)
     })
 
     const addScheduleMutation = useMutation({
@@ -299,8 +305,8 @@ const Schedule = () => {
                         <TextField size="small" label="Durasi (Menit)" type="number" value={duration <= 0 ? "" : duration} onChange={e => setScheduleDuration(Number(e.target.value))} />
                         <Typography fontWeight='500'>Aksi</Typography>
                         {actions.map((action, index) => {
-                            const selectedAction = availableActions.data?.find(item => item.id = action.actuator_id)
-                            const values = ActionTypeValues[selectedAction?.type as ActionType]
+                            const selectedAction = actuators.data?.find(item => item.id = action.actuator_id)
+                            const values = ActionTypeValues[selectedAction?.action_type as ActionType]
                             return <Card key={`action-${index + 1}`} variant="soft">
                                 <Grid container direction='row' gap={1}>
                                     <Select value={action.actuator_id} onChange={(_, val) => updateActionActuator(index, val as number)}>
