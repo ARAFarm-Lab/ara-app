@@ -1,4 +1,4 @@
-import { Box, Card, Grid, LinearProgress, Option, Select, Typography } from "@mui/joy"
+import { Box, Card, Chip, Grid, LinearProgress, Option, Select, Typography } from "@mui/joy"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import settingAPI from '@/apis/setting'
 import { ActionIcon, getActionIcon } from "@/constants/action"
@@ -12,14 +12,14 @@ const Setting = () => {
 
     const queryClient = useQueryClient()
     const actuators = useQuery({
-        queryKey: [settingAPI.QUERY_KEY_GET_ACTIVE_ACTUATORS, 1],
-        queryFn: () => settingAPI.getActiveActuators(1),
+        queryKey: [settingAPI.QUERY_KEY_GET_ACTUATORS, 1],
+        queryFn: () => settingAPI.getActuators(1),
     })
     const editPanelMutation = useMutation({
         mutationFn: (actuator: Actuator) => settingAPI.updateActuator(actuator),
         onSuccess: () => {
             setSelectedPanel(null)
-            queryClient.invalidateQueries({ queryKey: [settingAPI.QUERY_KEY_GET_ACTIVE_ACTUATORS, 1] })
+            queryClient.invalidateQueries({ queryKey: [settingAPI.QUERY_KEY_GET_ACTUATORS, 1] })
         }
     })
 
@@ -43,7 +43,10 @@ const Setting = () => {
                                     <Icon />
                                 </Box>
                             </Box>
-                            <Typography>{item.name}</Typography>
+                            <Box>
+                                <Typography>{item.name}</Typography>
+                                <Chip size="sm" sx={{ mt: .1 }} color={item.is_active ? 'success' : 'danger'}>{item.is_active ? "Aktif" : "Non Aktif"}</Chip>
+                            </Box>
                             <Typography sx={{ ml: 'auto' }} level="h4" fontWeight='400' textColor="#999">{item.terminal_number}</Typography>
                         </Grid>
                     </Card>
@@ -71,29 +74,37 @@ const Setting = () => {
                 }
             ]}
         >
-            <Grid container gap={2}>
-                <Select
-                    value={selectedPanel?.icon || ""}
-                    onChange={(_, val) => {
-                        if (!selectedPanel) {
-                            return
-                        }
-                        const panel: Actuator = { ...selectedPanel }
-                        panel.icon = val as ActionIcon
-                        setSelectedPanel(panel)
-                    }}
-                    renderValue={(val) => {
-                        const Icon = getActionIcon(val?.value as ActionIcon)
-                        return <Icon />
-                    }}>
-                    {Object.values(ActionIcon).map(icon => {
-                        const Icon = getActionIcon(icon)
-                        return <Option key={icon} value={icon}><Icon /></Option>
-                    })}
-                </Select>
-                <Grid flexGrow={1}>
-                    <TextField sx={{ width: '100%' }} size="small" label="Nama" value={selectedPanel?.name || ""} onChange={e => setSelectedPanel({ ...(selectedPanel as Actuator), name: e.target.value })} />
+            <Grid container gap={2} flexDirection='column'>
+                <Grid container gap={2}>
+                    <Select
+                        value={selectedPanel?.icon || ""}
+                        onChange={(_, val) => {
+                            if (!selectedPanel) {
+                                return
+                            }
+                            const panel: Actuator = { ...selectedPanel }
+                            panel.icon = val as ActionIcon
+                            setSelectedPanel(panel)
+                        }}
+                        renderValue={(val) => {
+                            const Icon = getActionIcon(val?.value as ActionIcon)
+                            return <Icon />
+                        }}>
+                        {Object.values(ActionIcon).map(icon => {
+                            const Icon = getActionIcon(icon)
+                            return <Option key={icon} value={icon}><Icon /></Option>
+                        })}
+                    </Select>
+                    <Grid flexGrow={1}>
+                        <TextField sx={{ width: '100%' }} size="small" label="Nama" value={selectedPanel?.name || ""} onChange={e => setSelectedPanel({ ...(selectedPanel as Actuator), name: e.target.value })} />
+                    </Grid>
                 </Grid>
+                <Select
+                    value={selectedPanel?.is_active || false}
+                    onChange={(_, val) => setSelectedPanel(({ ...(selectedPanel as Actuator), is_active: val || false }))}
+                >
+                    {[true, false].map(item => <Option key={item.toString()} value={item}>{item ? "Aktif" : "Non Aktif"}</Option>)}
+                </Select>
             </Grid>
         </Modal >
     </>
