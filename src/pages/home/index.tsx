@@ -1,4 +1,4 @@
-import { Box, Button, Card, Chip, CircularProgress, Grid, LinearProgress, Typography } from '@mui/joy'
+import { Box, Button, Card, Chip, CircularProgress, Grid, LinearProgress, Link, Typography } from '@mui/joy'
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import actionAPI from '@/apis/action'
 import reportAPI from '@/apis/report'
@@ -165,22 +165,28 @@ const Home = () => {
             </Box>
         </Card>
         <Typography sx={{ mt: 4 }} fontSize='1.2rem' fontWeight='600'>Panel Kontrol</Typography>
-        {actions.isLoading && <LinearProgress sx={{ mt: 2 }} />}
-        <Box sx={{ display: 'grid', gap: 2, mt: 2, gridTemplateColumns: '1fr 1fr' }}>
-            {(actions.data?.length || 0) > 0 && actions.data?.map((action, index) => {
-                const state = actionStates[index]
-                return <ButtonCard
-                    key={index}
-                    id={index}
-                    title={action.name}
-                    Icon={getActionIcon(action.icon)}
-                    on={state.data?.value || false}
-                    onText={getActionValueText(action.type, true)}
-                    offText={getActionValueText(action.type, false)}
-                    isLoading={state?.isLoading || mutationLoading[action.id]}
-                    onClick={() => mutateState(action.id, !state.data?.value)} />
-            })}
-        </Box>
+        {actions.isLoading ? <LinearProgress sx={{ mt: 2 }} /> :
+            (actions.data?.length || 0) == 0 ? (
+                <Typography color="neutral" fontSize="sm" textAlign="center" sx={{ mt: 2 }}>
+                    Panel aktif tidak ditemukan. Pastikan panel di halaman <Link href="/?t=3" fontWeight='600'>pengaturan</Link> telah aktif
+                </Typography>
+            ) :
+                <Box sx={{ display: 'grid', gap: 2, mt: 2, gridTemplateColumns: '1fr 1fr' }}>
+                    {actions.data?.map((action, index) => {
+                        const state = actionStates[index]
+                        return <ButtonCard
+                            key={index}
+                            id={index}
+                            title={action.name}
+                            Icon={getActionIcon(action.icon)}
+                            on={state.data?.value || false}
+                            onText={getActionValueText(action.type, true)}
+                            offText={getActionValueText(action.type, false)}
+                            isLoading={state?.isLoading || mutationLoading[action.id]}
+                            onClick={() => mutateState(action.id, !state.data?.value)} />
+                    })}
+                </Box>
+        }
         <Box sx={{ mt: 0 }}>
             <Typography sx={{ mt: 4 }} fontSize='1.2rem' fontWeight='600'>Riwayat Kontrol</Typography>
             {actionHistoriesQuery.isLoading ? <LinearProgress sx={{ mt: 2 }} /> : (

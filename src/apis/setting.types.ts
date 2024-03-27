@@ -6,5 +6,6 @@ export type Actuator = {
     action_type: ActionType,
     name: string,
     terminal_number: number,
-    icon: ActionIcon
+    icon: ActionIcon,
+    is_active: boolean
 }
