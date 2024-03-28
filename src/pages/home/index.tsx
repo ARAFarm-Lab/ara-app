@@ -16,6 +16,7 @@ import { SensorType } from '@/constants/sensor'
 
 import icon from '@/assets/icon.png'
 import { defaultDateTimeFormat } from '@/constants/date'
+import useTabStore from '@/stores/tab'
 
 const initialReportState = {
     [SensorType.SoilMoisture]: {
@@ -39,6 +40,7 @@ const Home = () => {
     const [mutationLoading, setMutationLoading] = useState<{ [key: string]: boolean }>({})
     const [reportStartTime, setReportStartTime] = useState<Dayjs>(createDateHourDayJSNow().add(-1, "hour"))
     const sensorReportCardRef = useRef<HTMLElement>()
+    const {setTab} = useTabStore()
 
     const actions = useQuery<Action[]>({
         queryKey: [actionAPI.QUERY_KEY_GET_ACTIONS],
@@ -168,7 +170,7 @@ const Home = () => {
         {actions.isLoading ? <LinearProgress sx={{ mt: 2 }} /> :
             (actions.data?.length || 0) == 0 ? (
                 <Typography color="neutral" fontSize="sm" textAlign="center" sx={{ mt: 2 }}>
-                    Panel aktif tidak ditemukan. Pastikan panel di halaman <Link href="/?t=3" fontWeight='600'>pengaturan</Link> telah aktif
+                    Panel aktif tidak ditemukan. Pastikan panel di halaman <Link onClick={() => setTab(3)} fontWeight='600'>pengaturan</Link> telah aktif
                 </Typography>
             ) :
                 <Box sx={{ display: 'grid', gap: 2, mt: 2, gridTemplateColumns: '1fr 1fr' }}>

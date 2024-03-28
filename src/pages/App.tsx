@@ -10,6 +10,8 @@ import { Box, LinearProgress } from '@mui/joy';
 import loadable from '@loadable/component'
 import './App.css';
 
+import useTabStore from '@/stores/tab';
+
 const colors = ['primary', 'danger', 'success', 'warning'] as const;
 const pages = [
   loadable(() => import('./home')),
@@ -19,7 +21,7 @@ const pages = [
 
 function App() {
   const [windowReady, setWindowReady] = useState<boolean>(false)
-  const [tabIndex, setTabIndex] = useState<number>(0)
+  const {tab, setTab} = useTabStore()
 
   useLayoutEffect(() => {
     const queryString = window.location.search
@@ -27,20 +29,20 @@ function App() {
     if (urlParams.has('t')) {
       const t = Number(urlParams.get('t'))
       if (t < 1 || t > pages.length) return
-      setTabIndex(t - 1)
+      setTab(t)
     }
     setWindowReady(true)
-  }, [])
+  }, [setTab])
 
   useEffect(() => {
     if (!windowReady) return
-    window.history.replaceState({}, '', `?t=${tabIndex + 1}`)
-  }, [tabIndex, windowReady])
+    window.history.replaceState({}, '', `?t=${tab}`)
+  }, [tab, windowReady])
 
   return (
     <>
-      <Page index={tabIndex} />
-      <BottomNavigation currentIndex={tabIndex} onIndexChange={setTabIndex} />
+      <Page index={tab - 1} />
+      <BottomNavigation currentIndex={tab - 1} onIndexChange={(index: number) => setTab(index + 1)} />
     </>
   )
 }
