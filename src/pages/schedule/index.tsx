@@ -1,4 +1,4 @@
-import { Action, DispatchActionRequest } from "@/apis/action.types";
+import { DispatchActionRequest } from "@/apis/action.types";
 import schedulerAPI from '@/apis/scheduler';
 import { CreateSchedulerRequest, ScheduledTask } from "@/apis/scheduler.types";
 import { ActionType, ActionTypeValues, ScheduleStatusNames } from "@/constants/action";
@@ -6,7 +6,7 @@ import { SchedulerRecurringMode } from "@/constants/scheduler";
 import { styled } from '@mui/material/styles';
 import Add from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Box, Button, Card, CardContent, Grid, LinearProgress, Option, Select, Tab, TabList, Tabs, Typography, tabClasses } from "@mui/joy";
+import { Box, Button, Card, CardContent, Grid, LinearProgress, Link, Option, Select, Tab, TabList, Tabs, Typography, tabClasses } from "@mui/joy";
 import { TimePicker } from "@mui/x-date-pickers";
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
@@ -20,8 +20,9 @@ import IconButton, { IconButtonProps } from '@mui/joy/IconButton';
 import { defaultDateTimeFormat } from "@/constants/date";
 import ConfirmationDialog from "../../components/confirmation-dialog"
 
-import actionAPI from "@/apis/action"
 import settingAPI from "@/apis/setting"
+import { Actuator } from "@/apis/setting.types";
+import useTabStore from "@/stores/tab";
 
 const scheduleModeTabMap: { [key: number]: SchedulerRecurringMode } = {
     0: SchedulerRecurringMode.NONE,
@@ -42,11 +43,6 @@ const Schedule = () => {
     const upcomingSchedulesQuery = useQuery({
         queryKey: [schedulerAPI.QUERY_KEY_GET_UPCOMING_SCHEDULES, 1],
         queryFn: schedulerAPI.getUpcomingSchedules
-    })
-
-    const availableActions = useQuery({
-        queryKey: [actionAPI.QUERY_KEY_GET_ACTIONS, 1],
-        queryFn: () => actionAPI.getActions(1)
     })
 
     const actuators = useQuery({
@@ -93,25 +89,18 @@ const Schedule = () => {
         id: -1,
     })
     const upcomingSchedules = useMemo(() => upcomingSchedulesQuery.data, [upcomingSchedulesQuery.data])
-    const availableActionList: Action[] = useMemo(() => {
-        if (availableActions.isLoading || availableActions.data?.length == 0) {
-            return []
-        }
-        return availableActions.data?.map((item) => {
-            return { ...item }
-        }) as Action[]
-    }, [availableActions.data, availableActions.isLoading])
     const defaultAddActionRequest: Partial<DispatchActionRequest> = useMemo(() => {
-        if (availableActions.isLoading || availableActions.data?.length == 0) {
+        if (actuators.isLoading || actuators.data?.length == 0) {
             return {}
         }
-        const action = (availableActions?.data as Action[])[0]
+        const action = (actuators?.data as Actuator[])[0]
         return {
             actuator_id: action.id,
             device_id: 1,
             value: false
         }
-    }, [availableActions])
+    }, [actuators])
+    const setTab = useTabStore(store => store.setTab)
 
     const handleAddNewSchedule = () => {
         setScheduleName("")
@@ -224,10 +213,12 @@ const Schedule = () => {
                                         <Typography fontSize='sm' fontWeight={600}>Deskripsi</Typography>
                                         <Typography fontSize='sm'>{schedule.description}</Typography>
                                     </Box>}
-                                    <Box sx={{ mt: 2 }}>
-                                        <Typography fontSize='sm' fontWeight={600}>Waktu Eksekusi Terakhir</Typography>
-                                        <Typography fontSize='sm'>{dayjs(schedule.last_run_at).format(defaultDateTimeFormat)}</Typography>
-                                    </Box>
+                                    {schedule.last_run_at && (
+                                        <Box sx={{ mt: 2 }}>
+                                            <Typography fontSize='sm' fontWeight={600}>Waktu Eksekusi Terakhir</Typography>
+                                            <Typography fontSize='sm'>{dayjs(schedule.last_run_at).format(defaultDateTimeFormat)}</Typography>
+                                        </Box>
+                                    )}
                                     <Box sx={{ mt: 2 }}>
                                         <Typography fontSize='sm' fontWeight={600}>Status Terakhir</Typography>
                                         <Typography fontSize='sm'>{ScheduleStatusNames[schedule.last_run_status]}</Typography>
@@ -310,7 +301,7 @@ const Schedule = () => {
                             return <Card key={`action-${index + 1}`} variant="soft">
                                 <Grid container direction='row' gap={1}>
                                     <Select value={action.actuator_id} onChange={(_, val) => updateActionActuator(index, val as number)}>
-                                        {availableActionList.map(item => <Option key={`actuator-item-${index}-${item.id}`} value={item.id}>{item.name}</Option>)}
+                                        {actuators.data?.map(item => <Option disabled={!item.is_active} key={`actuator-item-${index}-${item.id}`} value={item.id}>{item.name}</Option>)}
                                     </Select>
                                     <Select value={action.value ? "1" : "0"} onChange={(_, val) => updateActionValue(index, val as string)}>
                                         {Object.keys(values).map(key => <Option key={`actuator-value-${index}-${key}`} value={key}>{values[key]}</Option>)}
@@ -319,7 +310,13 @@ const Schedule = () => {
                                 </Grid>
                             </Card>
                         })}
-                        {defaultAddActionRequest.actuator_id && <Button variant="soft" startDecorator={<Add />} color="primary" onClick={() => setActions(prev => ([...prev, { ...defaultAddActionRequest as DispatchActionRequest }]))}>Tambah Aksi</Button>}
+                        {actuators.data?.some(item => item.is_active) ?
+                            defaultAddActionRequest.actuator_id && <Button variant="soft" startDecorator={<Add />} color="primary" onClick={() => setActions(prev => ([...prev, { ...defaultAddActionRequest as DispatchActionRequest }]))}>Tambah Aksi</Button>
+                            : (
+                                <Typography color="neutral" fontSize="sm" textAlign="center">
+                                    Tidak bisa menambah aksi karena tidak ada panel yang aktif. Pastikan panel pada <Link onClick={() => setTab(3)} fontWeight='600'>pengaturan</Link> telah aktif
+                                </Typography>
+                            )}
                     </form>
                 </Grid>
             </Modal >

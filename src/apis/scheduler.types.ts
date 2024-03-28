@@ -14,6 +14,6 @@ export type CreateSchedulerRequest = {
 export type ScheduledTask = CreateSchedulerRequest & {
     id: number
     last_run_status: ScheduleStatus,
-    last_run_at: string,
+    last_run_at: string | null,
     next_run_at: string
 }
