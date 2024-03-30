@@ -76,7 +76,16 @@ const Setting = () => {
         >
             <Grid container gap={2} flexDirection='column'>
                 <Grid flexGrow={1}>
-                    <TextField sx={{ width: '100%' }} size="small" label="Nama" value={selectedPanel?.name || ""} onChange={e => setSelectedPanel({ ...(selectedPanel as Actuator), name: e.target.value })} />
+                    <TextField
+                        sx={{ width: '100%' }}
+                        size="small"
+                        label="Nama"
+                        value={selectedPanel?.name || ""}
+                        onChange={e => setSelectedPanel({ ...(selectedPanel as Actuator), name: e.target.value })}
+                        inputProps={{
+                            maxLength: 20
+                        }}
+                    />
                 </Grid>
                 <Grid container justifyContent='space-between' gap={2}>
                     <Select
@@ -99,7 +108,6 @@ const Setting = () => {
                         })}
                     </Select>
                     <Select
-                    
                         value={selectedPanel?.is_active || false}
                         onChange={(_, val) => setSelectedPanel(({ ...(selectedPanel as Actuator), is_active: val || false }))}
                     >

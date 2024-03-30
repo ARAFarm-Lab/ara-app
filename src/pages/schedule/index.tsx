@@ -21,7 +21,6 @@ import { defaultDateTimeFormat } from "@/constants/date";
 import ConfirmationDialog from "../../components/confirmation-dialog"
 
 import settingAPI from "@/apis/setting"
-import { Actuator } from "@/apis/setting.types";
 import useTabStore from "@/stores/tab";
 
 const scheduleModeTabMap: { [key: number]: SchedulerRecurringMode } = {
@@ -45,7 +44,7 @@ const Schedule = () => {
         queryFn: schedulerAPI.getUpcomingSchedules
     })
 
-    const actuators = useQuery({
+    const actuatorsQuery = useQuery({
         queryKey: [settingAPI.QUERY_KEY_GET_ACTUATORS, 1],
         queryFn: () => settingAPI.getActuators(1)
     })
@@ -88,19 +87,22 @@ const Schedule = () => {
     const [expandedSchedule, setExpandedSchedule] = useState<Partial<ScheduledTask>>({
         id: -1,
     })
+    const setTab = useTabStore(store => store.setTab)
+
     const upcomingSchedules = useMemo(() => upcomingSchedulesQuery.data, [upcomingSchedulesQuery.data])
+    const actuators = useMemo(() => [...actuatorsQuery.data || []], [actuatorsQuery.data])
+
     const defaultAddActionRequest: Partial<DispatchActionRequest> = useMemo(() => {
-        if (actuators.isLoading || actuators.data?.length == 0) {
+        if (!actuators || actuators?.length == 0) {
             return {}
         }
-        const action = (actuators?.data as Actuator[])[0]
+        const activeActuator = actuators.find(item => item.is_active)
         return {
-            actuator_id: action.id,
+            actuator_id: activeActuator?.id,
             device_id: 1,
             value: false
         }
     }, [actuators])
-    const setTab = useTabStore(store => store.setTab)
 
     const handleAddNewSchedule = () => {
         setScheduleName("")
@@ -296,21 +298,23 @@ const Schedule = () => {
                         <TextField size="small" label="Durasi (Menit)" type="number" value={duration <= 0 ? "" : duration} onChange={e => setScheduleDuration(Number(e.target.value))} />
                         <Typography fontWeight='500'>Aksi</Typography>
                         {actions.map((action, index) => {
-                            const selectedAction = actuators.data?.find(item => item.id = action.actuator_id)
+                            const selectedAction = actuators?.find(item => item.id == action.actuator_id)
                             const values = ActionTypeValues[selectedAction?.action_type as ActionType]
                             return <Card key={`action-${index + 1}`} variant="soft">
                                 <Grid container direction='row' gap={1}>
-                                    <Select value={action.actuator_id} onChange={(_, val) => updateActionActuator(index, val as number)}>
-                                        {actuators.data?.map(item => <Option disabled={!item.is_active} key={`actuator-item-${index}-${item.id}`} value={item.id}>{item.name}</Option>)}
-                                    </Select>
-                                    <Select value={action.value ? "1" : "0"} onChange={(_, val) => updateActionValue(index, val as string)}>
-                                        {Object.keys(values).map(key => <Option key={`actuator-value-${index}-${key}`} value={key}>{values[key]}</Option>)}
-                                    </Select>
-                                    <IconButton sx={{ ml: 'auto' }} variant="plain" color="danger" onClick={() => setActions(prev => prev.filter((_, i) => i !== index))}><DeleteIcon /></IconButton>
+                                    <Grid container direction='row' gap={1} sx={{ flex: 9}}>
+                                        <Select value={action.actuator_id} onChange={(_, val) => updateActionActuator(index, val as number)}>
+                                            {actuators?.map(item => <Option disabled={!item.is_active} key={`actuator-item-${index}-${item.id}`} value={item.id}>{item.name}</Option>)}
+                                        </Select>
+                                        <Select value={action.value ? "1" : "0"} onChange={(_, val) => updateActionValue(index, val as string)}>
+                                            {Object.keys(values).map(key => <Option key={`actuator-value-${index}-${key}`} value={key}>{values[key]}</Option>)}
+                                        </Select>
+                                    </Grid>
+                                    <IconButton sx={{ flex: 1, ml: 'auto' }} variant="plain" color="danger" onClick={() => setActions(prev => prev.filter((_, i) => i !== index))}><DeleteIcon /></IconButton>
                                 </Grid>
                             </Card>
                         })}
-                        {actuators.data?.some(item => item.is_active) ?
+                        {actuators?.some(item => item.is_active) ?
                             defaultAddActionRequest.actuator_id && <Button variant="soft" startDecorator={<Add />} color="primary" onClick={() => setActions(prev => ([...prev, { ...defaultAddActionRequest as DispatchActionRequest }]))}>Tambah Aksi</Button>
                             : (
                                 <Typography color="neutral" fontSize="sm" textAlign="center">
