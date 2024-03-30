@@ -40,7 +40,7 @@ const Home = () => {
     const [mutationLoading, setMutationLoading] = useState<{ [key: string]: boolean }>({})
     const [reportStartTime, setReportStartTime] = useState<Dayjs>(createDateHourDayJSNow().add(-1, "hour"))
     const sensorReportCardRef = useRef<HTMLElement>()
-    const {setTab} = useTabStore()
+    const { setTab } = useTabStore()
 
     const actions = useQuery<Action[]>({
         queryKey: [actionAPI.QUERY_KEY_GET_ACTIONS],
@@ -84,11 +84,14 @@ const Home = () => {
     })
 
 
-    const mutateState = (actuator_id: number, state: boolean) => {
+    const mutateState = (actuator_id: number, value: boolean) => {
+        if (mutationLoading[actuator_id]) {
+            return
+        }
         const request: DispatchActionRequest = {
             actuator_id,
             device_id: 1,
-            value: state,
+            value: value,
         }
         actionMutation.mutate(request)
     }
