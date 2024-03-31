@@ -1,12 +1,26 @@
+import useAuthStore from "@/stores/auth"
 import string from "./string"
 
 const BASE_URL = import.meta.env.VITE_BASE_URL
 
 const buildURL = (endpoint: string) => `${BASE_URL}${endpoint}`
+const buildRequestConfig = (config: any) => {
+    const result = {
+        ...config,
+        headers: {
+        }
+    }
+    const token = useAuthStore.getState().accessToken
+    if (token) {
+        result.headers.Authorization = `Bearer ${token}`
+    }
+
+    return result
+}
 
 const doRequest = async <T>(endpoint: string, config: any): Promise<T> => {
     try {
-        const response = await fetch(buildURL(endpoint), config)
+        const response = await fetch(buildURL(endpoint), buildRequestConfig(config))
         const json = await response.json()
         if (!json.is_success || response.status < 200 || response.status > 299) {
             return Promise.reject(string.toTitleCase(json.error))

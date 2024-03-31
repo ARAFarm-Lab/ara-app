@@ -18,10 +18,11 @@ import Modal from './modal';
 import { Collapse, TextField } from "@mui/material";
 import IconButton, { IconButtonProps } from '@mui/joy/IconButton';
 import { defaultDateTimeFormat } from "@/constants/date";
-import ConfirmationDialog from "../../components/confirmation-dialog"
+import ConfirmationDialog from "../../../components/confirmation-dialog"
 
 import settingAPI from "@/apis/setting"
 import useTabStore from "@/stores/tab";
+import { createLazyRoute } from "@tanstack/react-router";
 
 const scheduleModeTabMap: { [key: number]: SchedulerRecurringMode } = {
     0: SchedulerRecurringMode.NONE,
@@ -184,7 +185,7 @@ const Schedule = () => {
 
     return (
         <>
-            <Box sx={{ px: 2 }}>
+            <Box sx={{ px: 2 }} className='fade'>
                 <Typography sx={{ mt: 4 }} level="h2" fontWeight='500'>Penjadwalan</Typography>
                 <Grid key="main-grid" container direction='column' sx={{ mt: 2 }} gap={2} >
                     <Button
@@ -302,7 +303,7 @@ const Schedule = () => {
                             const values = ActionTypeValues[selectedAction?.action_type as ActionType]
                             return <Card key={`action-${index + 1}`} variant="soft">
                                 <Grid container direction='row' gap={1}>
-                                    <Grid container direction='row' gap={1} sx={{ flex: 9}}>
+                                    <Grid container direction='row' gap={1} sx={{ flex: 9 }}>
                                         <Select value={action.actuator_id} onChange={(_, val) => updateActionActuator(index, val as number)}>
                                             {actuators?.map(item => <Option disabled={!item.is_active} key={`actuator-item-${index}-${item.id}`} value={item.id}>{item.name}</Option>)}
                                         </Select>
@@ -355,5 +356,6 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
     }),
 }));
 
-
-export default Schedule
+export const ScheduleRoute = createLazyRoute('/schedule')({
+    component: Schedule,
+})
