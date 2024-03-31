@@ -8,6 +8,7 @@ import authAPI from '@/apis/auth'
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { AuthRequest } from "@/apis/auth.types"
 import useAuthStore from "@/stores/auth"
+import useNotification from "@/stores/notification"
 
 const Auth = () => {
     const [isLoginState, setIsLoginState] = useState(true)
@@ -21,6 +22,7 @@ const Auth = () => {
     })
     const auth = useAuthStore()
     const navigate = useNavigate()
+    const notification = useNotification()
 
     const authMutation = useMutation({
         mutationFn: (request: AuthRequest) => isLoginState ? authAPI.loginUser(request) : authAPI.registerUser(request),
@@ -66,7 +68,6 @@ const Auth = () => {
         return email !== "" && password !== "";
     }
 
-    console.log(userInfoQuery.data)
     useEffect(() => {
         if (userInfoQuery.isLoading) return
         if (userInfoQuery.data?.is_active) {
@@ -74,8 +75,9 @@ const Auth = () => {
                 to: '/dashboard',
                 replace: true,
             })
+            notification.fire(`Selamat Datang ${userInfoQuery.data.name}!`)
         }
-    }, [userInfoQuery.data?.is_active, userInfoQuery.isLoading, navigate])
+    }, [userInfoQuery.data, userInfoQuery.isLoading, navigate, notification])
 
     return (
         <Grid container flexDirection='column' gap={2} sx={{ p: 2, height: '100vh' }} alignItems='center' justifyContent='center' className="fade">

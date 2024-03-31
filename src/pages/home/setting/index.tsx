@@ -10,12 +10,14 @@ import { Actuator } from "@/apis/setting.types"
 import { createLazyRoute, useNavigate } from "@tanstack/react-router"
 import ConfirmationDialog from "@/components/confirmation-dialog"
 import useAuthStore from "@/stores/auth"
+import useNotification from "@/stores/notification"
 
 const Setting = () => {
     const [selectedPanel, setSelectedPanel] = useState<Actuator | null>()
     const [isLogoutModalOpened, setLogoutModalOpened] = useState(false)
     const auth = useAuthStore()
     const navigate = useNavigate()
+    const notification = useNotification()
 
     const queryClient = useQueryClient()
     const actuators = useQuery({
@@ -27,6 +29,7 @@ const Setting = () => {
         onSuccess: () => {
             setSelectedPanel(null)
             queryClient.invalidateQueries({ queryKey: [settingAPI.QUERY_KEY_GET_ACTUATORS, 1] })
+            notification.fire("Berhasil mengubah panel")
         }
     })
 
@@ -40,10 +43,11 @@ const Setting = () => {
         queryClient.removeQueries({queryKey: [authAPI.QUERY_KEY_GET_USER_INFO]})
         setLogoutModalOpened(false)
         navigate({ to: '/auth', replace: true })
+        notification.fire('Berhasil Keluar Akun')
     }
 
     return <>
-        <Box sx={{ px: 2 }}>
+        <Box sx={{ px: 2 }} className="fade">
             <Typography sx={{ mt: 4 }} level="h2" fontWeight='500'>Pengaturan</Typography>
             <Grid container sx={{ pt: 3 }} flexDirection='column' gap={2}>
                 {actuators.isLoading && <LinearProgress />}

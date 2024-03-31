@@ -23,6 +23,7 @@ import ConfirmationDialog from "../../../components/confirmation-dialog"
 import settingAPI from "@/apis/setting"
 import useTabStore from "@/stores/tab";
 import { createLazyRoute } from "@tanstack/react-router";
+import useNotification from "@/stores/notification";
 
 const scheduleModeTabMap: { [key: number]: SchedulerRecurringMode } = {
     0: SchedulerRecurringMode.NONE,
@@ -55,6 +56,7 @@ const Schedule = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [schedulerAPI.QUERY_KEY_GET_UPCOMING_SCHEDULES, 1] })
             setIsAddModalOpen(false)
+            notification.fire("Berhasil menambah jadwal")
         },
     })
 
@@ -63,6 +65,7 @@ const Schedule = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [schedulerAPI.QUERY_KEY_GET_UPCOMING_SCHEDULES, 1] })
             setIsDeleteConfirmationOpen(false)
+            notification.fire("Berhasil menghapus jadwal")
         },
     })
 
@@ -74,6 +77,7 @@ const Schedule = () => {
             setExpandedSchedule({
                 id: -1,
             })
+            notification.fire("Berhasil mengubah jadwal")
         },
     })
 
@@ -89,6 +93,7 @@ const Schedule = () => {
         id: -1,
     })
     const setTab = useTabStore(store => store.setTab)
+    const notification = useNotification()
 
     const upcomingSchedules = useMemo(() => upcomingSchedulesQuery.data, [upcomingSchedulesQuery.data])
     const actuators = useMemo(() => [...actuatorsQuery.data || []], [actuatorsQuery.data])

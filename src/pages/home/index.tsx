@@ -29,12 +29,10 @@ const tabs = [
 
 const App = () => {
     return (
-        // <Box display='flex' flexDirection='column' sx={{ height: '100vh' }}>
         <Grid flexDirection='column' display='flex' sx={{ minHeight: '100vh', background: 'white' }}>
             <Outlet />
             <BottomNavigation />
         </Grid>
-        // </Box>
     )
 }
 
@@ -59,7 +57,7 @@ const BottomNavigation = () => {
             left: 0,
             right: 0,
             boxShadow: theme.shadow.sm,
-            // '--joy-shadowChannel': theme.vars.palette[colors[currentIndex]].darkChannel,
+            '--joy-shadowChannel': theme.vars.palette[colors[currentIndex]].darkChannel,
             [`& .${tabClasses.root}`]: {
                 py: 1,
                 flex: 1,
