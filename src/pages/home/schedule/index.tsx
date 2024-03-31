@@ -140,7 +140,6 @@ const Schedule = () => {
 
     const handleEditSchedule = () => {
         if (!expandedSchedule.id) return
-        // console.log(scheduleModeTabMap[scheduleModeIndex])
         updateScheduleMutation.mutate({
             ...expandedSchedule as ScheduledTask,
             name: scheduleName,
@@ -247,7 +246,7 @@ const Schedule = () => {
                         label: 'Simpan',
                         variant: 'solid',
                         color: 'primary',
-                        loading: addScheduleMutation.isPending,
+                        loading: addScheduleMutation.isPending || updateScheduleMutation.isPending,
                         onClick: (expandedSchedule.id || 0) > 0 ? handleEditSchedule : handleSaveSchedule,
                     },
                     {
