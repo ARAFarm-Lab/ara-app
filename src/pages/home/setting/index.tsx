@@ -1,14 +1,21 @@
-import { Box, Card, Chip, Grid, LinearProgress, Select, Option, Typography } from "@mui/joy"
+import { Box, Card, Chip, Grid, LinearProgress, Select, Option, Typography, Button } from "@mui/joy"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import settingAPI from '@/apis/setting'
+import authAPI from '@/apis/auth'
 import { ActionIcon, getActionIcon } from "@/constants/action"
 import Modal from "../schedule/modal"
 import { TextField } from "@mui/material"
 import { useState } from "react"
 import { Actuator } from "@/apis/setting.types"
+import { createLazyRoute, useNavigate } from "@tanstack/react-router"
+import ConfirmationDialog from "@/components/confirmation-dialog"
+import useAuthStore from "@/stores/auth"
 
 const Setting = () => {
     const [selectedPanel, setSelectedPanel] = useState<Actuator | null>()
+    const [isLogoutModalOpened, setLogoutModalOpened] = useState(false)
+    const auth = useAuthStore()
+    const navigate = useNavigate()
 
     const queryClient = useQueryClient()
     const actuators = useQuery({
@@ -26,6 +33,13 @@ const Setting = () => {
     const handleEditPanel = () => {
         if (!selectedPanel) return
         editPanelMutation.mutate(selectedPanel as Actuator)
+    }
+
+    const handleLogout = () => {
+        auth.clearAuth()
+        queryClient.removeQueries({queryKey: [authAPI.QUERY_KEY_GET_USER_INFO]})
+        setLogoutModalOpened(false)
+        navigate({ to: '/auth', replace: true })
     }
 
     return <>
@@ -51,9 +65,19 @@ const Setting = () => {
                         </Grid>
                     </Card>
                 })}
+                <Button variant='outlined' color='danger' sx={{ mt: 2 }} onClick={() => setLogoutModalOpened(true)}>Keluar Akun</Button>
                 <Typography textAlign='center' color="neutral" fontSize='sm'>Made with 🔥 by ARA Farm Lab</Typography>
             </Grid>
         </Box >
+        <ConfirmationDialog
+            cancelText="Batal"
+            description="Anda harus masuk kembali untuk menggunakan aplikasi"
+            okText="Keluar"
+            title="Keluar Akun"
+            isOpen={isLogoutModalOpened}
+            onCancel={() => setLogoutModalOpened(false)}
+            onOk={handleLogout}
+        />
         <Modal
             title="Edit Panel"
             isOpen={selectedPanel != null}
@@ -119,4 +143,6 @@ const Setting = () => {
     </>
 }
 
-export default Setting
+export const SettingRoute = createLazyRoute('/setting')({
+    component: Setting
+})

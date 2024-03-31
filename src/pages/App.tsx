@@ -1,125 +1,84 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
-import ListItemDecorator from '@mui/joy/ListItemDecorator';
-import Tabs from '@mui/joy/Tabs';
-import TabList from '@mui/joy/TabList';
-import Tab, { tabClasses } from '@mui/joy/Tab';
-import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
-import ScheduleIcon from '@mui/icons-material/Schedule';
-import SettingIcon from '@mui/icons-material/Settings';
-import { Box, LinearProgress } from '@mui/joy';
-import loadable from '@loadable/component'
+import { Box, LinearProgress, Typography } from '@mui/joy';
 import './App.css';
 
-import useTabStore from '@/stores/tab';
+import { Outlet, RouterProvider, createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
+import useAuthStore from '@/stores/auth';
 
-const colors = ['primary', 'danger', 'success', 'warning'] as const;
-const pages = [
-  loadable(() => import('./home')),
-  loadable(() => import('./schedule')),
-  loadable(() => import('./setting'))
-]
+// Root route section
+const rootRoute = createRootRoute({
+  component: () => (
+    <Box sx={{ minHeight: '100vh' }}>
+      <Outlet />
+    </Box>
+  ),
+  notFoundComponent: () => <Typography>Halaman Tidak Ditemukan, Hubungi Admin</Typography>
+})
 
-function App() {
-  const [windowReady, setWindowReady] = useState<boolean>(false)
-  const {tab, setTab} = useTabStore()
-
-  useLayoutEffect(() => {
-    const queryString = window.location.search
-    const urlParams = new URLSearchParams(queryString);
-    if (urlParams.has('t')) {
-      const t = Number(urlParams.get('t'))
-      if (t < 1 || t > pages.length) return
-      setTab(t)
+// Home route section
+const homeRoute = createRoute({
+  beforeLoad: ({ location }) => {
+    const accessToken = useAuthStore.getState().accessToken
+    if (location.pathname == '/') {
+      throw redirect({
+        to: "/dashboard",
+        replace: true
+      })
     }
-    setWindowReady(true)
-  }, [setTab])
 
-  useEffect(() => {
-    if (!windowReady) return
-    window.history.replaceState({}, '', `?t=${tab}`)
-  }, [tab, windowReady])
+    if (!accessToken) {
+      throw redirect({
+        to: "/auth",
+        replace: true
+      })
+    }
+  },
+  getParentRoute: () => rootRoute,
+  path: '/',
+}).lazy(() => import('./home').then(d => d.HomeRoute))
 
-  return (
-    <>
-      <Page index={tab - 1} />
-      <BottomNavigation currentIndex={tab - 1} onIndexChange={(index: number) => setTab(index + 1)} />
-    </>
-  )
-}
+const dashboardRoute = createRoute({
+  getParentRoute: () => homeRoute,
+  path: '/dashboard',
+  loader: () => <></>
+}).lazy(() => import('./home/dashboard').then(d => d.DashboardRoute))
 
-const Page = ({ index }: { index: number }) => {
-  const Page = pages[index]
-  return <Box key={index} sx={{ pb: 2 }} className='fade'>
-    <Page fallback={<LinearProgress />} />
-  </Box>
-}
+const scheduleRoute = createRoute({
+  getParentRoute: () => homeRoute,
+  path: '/schedule',
+  loader: () => <></>
+}).lazy(() => import('./home/schedule').then(d => d.ScheduleRoute))
 
-const BottomNavigation = ({ currentIndex, onIndexChange }: BottomNavigationProps) => {
-  return <Tabs
-    size="lg"
-    aria-label="Bottom Navigation"
-    value={currentIndex}
-    onChange={(_, value) => onIndexChange(value as number)}
-    sx={(theme) => ({
-      mt: 'auto',
-      borderRadius: 16,
-      position: 'sticky',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      boxShadow: theme.shadow.sm,
-      '--joy-shadowChannel': theme.vars.palette[colors[currentIndex]].darkChannel,
-      [`& .${tabClasses.root}`]: {
-        py: 1,
-        flex: 1,
-        transition: '0.3s',
-        fontWeight: 'md',
-        fontSize: 'md',
-        [`&:not(.${tabClasses.selected}):not(:hover)`]: {
-          opacity: 0.7,
-        },
-      },
-    })}
-  >
-    <TabList
-      variant='soft'
-      size="sm"
-      disableUnderline
-    >
-      <Tab
-        orientation="vertical"
-        {...(currentIndex === 0 && { color: colors[0] })}
-      >
-        <ListItemDecorator>
-          <HomeRoundedIcon />
-        </ListItemDecorator>
-        Dashboard
-      </Tab>
-      <Tab
-        orientation="vertical"
-        {...(currentIndex === 1 && { color: colors[1] })}
-      >
-        <ListItemDecorator>
-          <ScheduleIcon />
-        </ListItemDecorator>
-        Penjadwalan
-      </Tab>
-      <Tab
-        orientation="vertical"
-        {...(currentIndex === 2 && { color: colors[2] })}
-      >
-        <ListItemDecorator>
-          <SettingIcon />
-        </ListItemDecorator>
-        Pengaturan
-      </Tab>
-    </TabList>
-  </Tabs>
-}
+const settingRoute = createRoute({
+  getParentRoute: () => homeRoute,
+  path: '/setting',
+  loader: () => <></>
+}).lazy(() => import('./home/setting').then(d => d.SettingRoute))
 
-type BottomNavigationProps = {
-  currentIndex: number
-  onIndexChange: (index: number) => void
-}
+
+// Auth route section
+const authRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth',
+}).lazy(() => import('./auth').then(d => d.AuthRoute))
+
+// Construct the route tree
+const routeTree = rootRoute.addChildren([
+  authRoute,
+  homeRoute.addChildren([
+    dashboardRoute,
+    scheduleRoute,
+    settingRoute
+  ])
+])
+
+const router = createRouter({
+  routeTree,
+  defaultPendingComponent: () => <Box><LinearProgress /></Box>,
+  defaultErrorComponent: () => <Typography>Terjadi Kesalahan, Segera Hubungi Admin</Typography>,
+  defaultPendingMs: 0,
+  defaultPendingMinMs: 0
+})
+
+const App = () => <RouterProvider router={router} />
 
 export default App
