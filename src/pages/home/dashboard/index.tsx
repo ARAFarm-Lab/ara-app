@@ -16,7 +16,6 @@ import dayjs, { Dayjs } from 'dayjs'
 import { SensorType } from '@/constants/sensor'
 
 import icon from '@/assets/icon.png'
-import { defaultDateTimeFormat } from '@/constants/date'
 import useTabStore from '@/stores/tab'
 import { createLazyRoute } from '@tanstack/react-router'
 
@@ -218,8 +217,9 @@ const Dashboard = () => {
                                         </Grid>
                                     </Grid>
                                     <Grid container direction='column' alignItems='flex-end'>
-                                        <Typography fontSize='sm' textColor={'primary.600'} fontWeight='600'>{dayjs(history.action_at).format(defaultDateTimeFormat)}</Typography>
-                                        <Typography fontSize='sm'>{actionSourceNameMap[history.action_by]}</Typography>
+                                        <Typography fontSize='xs' textColor={'primary.600'} fontWeight='600'>{dayjs(history.action_at).format("DD-MM-YYYY")}</Typography>
+                                        <Typography fontSize='xs' textColor={'primary.600'} fontWeight='600'>{dayjs(history.action_at).format("HH:mm")}</Typography>
+                                        <Typography fontSize='xs'>{actionSourceNameMap[history.action_by]}</Typography>
                                     </Grid>
                                 </Grid>
                             </Card>

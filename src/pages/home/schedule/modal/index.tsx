@@ -22,7 +22,7 @@ const modalTransition: Partial<ModalTransition> = {
     exited: { transform: `translateY(100%)` },
 }
 
-const Modal = ({title, isOpen, onClose, children, buttonActions }: ModalProps) => {
+const Modal = ({ title, isOpen, onClose, children, buttonActions }: ModalProps) => {
     return (
         <>
             <Transition in={isOpen} timeout={modalTransitionDelayMs}>
@@ -72,7 +72,7 @@ const Modal = ({title, isOpen, onClose, children, buttonActions }: ModalProps) =
                                             key={index}
                                             variant={action.variant}
                                             color={action.color}
-                                            onClick={action.onClick}
+                                            onClick={action.loading ? () => {} : action.onClick}
                                             loading={action.loading}
                                         >
                                             {action.label}

@@ -29,10 +29,12 @@ const tabs = [
 
 const App = () => {
     return (
-        <Grid container flexDirection='column' sx={{ minHeight: '100vh', background: 'white' }}>
+        // <Box display='flex' flexDirection='column' sx={{ height: '100vh' }}>
+        <Grid flexDirection='column' display='flex' sx={{ minHeight: '100vh', background: 'white' }}>
             <Outlet />
             <BottomNavigation />
         </Grid>
+        // </Box>
     )
 }
 
