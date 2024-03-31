@@ -1,16 +1,53 @@
-import { Box, LinearProgress, Typography } from '@mui/joy';
+import { Box, Button, LinearProgress, Snackbar, Typography } from '@mui/joy';
 import './App.css';
 
 import { Outlet, RouterProvider, createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
 import useAuthStore from '@/stores/auth';
+import useNotification from '@/stores/notification';
+import { useQueryClient } from '@tanstack/react-query';
+
+const Root = () => {
+  const notification = useNotification()
+  const queryClient = useQueryClient()
+
+  queryClient.setDefaultOptions({
+    mutations: {
+      onError: (error) => {
+        console.log(error)
+        notification.fire(error.message, 'danger')
+      }
+    }
+  })
+
+  return (
+    <Box sx={{ minHeight: '100vh' }}>
+      <Snackbar
+        variant='soft'
+        autoHideDuration={3000}
+        color={notification.type}
+        open={notification.is_open}
+        onClose={notification.clear}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        endDecorator={
+          <Button
+            onClick={() => notification.clear()}
+            size="sm"
+            variant="soft"
+            color={notification.type}
+          >
+            Tutup
+          </Button>
+        }
+      >{notification.message}</Snackbar>
+
+      <Outlet />
+    </Box>
+  )
+}
 
 // Root route section
 const rootRoute = createRootRoute({
-  component: () => (
-    <Box sx={{ minHeight: '100vh' }}>
-      <Outlet />
-    </Box>
-  ),
+  component: Root,
   notFoundComponent: () => <Typography>Halaman Tidak Ditemukan, Hubungi Admin</Typography>
 })
 
