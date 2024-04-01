@@ -5,6 +5,7 @@ export type AuthStore = {
 }
 
 export type UserInfo = {
+    user_id: number,
     name: string
     role: number
     is_active: boolean

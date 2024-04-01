@@ -91,6 +91,12 @@ const settingRoute = createRoute({
   loader: () => <></>
 }).lazy(() => import('./home/setting').then(d => d.SettingRoute))
 
+const adminRoute = createRoute({
+  getParentRoute: () => homeRoute,
+  path: '/admin',
+  loader: () => <></>
+}).lazy(() => import('./home/admin').then(d => d.AdminRoute))
+
 
 // Auth route section
 const authRoute = createRoute({
@@ -104,7 +110,8 @@ const routeTree = rootRoute.addChildren([
   homeRoute.addChildren([
     dashboardRoute,
     scheduleRoute,
-    settingRoute
+    settingRoute,
+    adminRoute
   ])
 ])
 

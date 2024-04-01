@@ -7,6 +7,9 @@ import ScheduleIcon from '@mui/icons-material/Schedule';
 import SettingIcon from '@mui/icons-material/Settings';
 import { Outlet, createLazyRoute, useNavigate, useRouterState } from '@tanstack/react-router';
 import { Grid } from '@mui/joy';
+import { useQuery } from '@tanstack/react-query';
+import userAPI from '@/apis/user'
+import { UserInfo } from '@/stores/auh.types';
 
 const colors = ['primary', 'danger', 'success', 'warning'] as const;
 const tabs = [
@@ -38,6 +41,10 @@ const App = () => {
 
 const BottomNavigation = () => {
     const navigate = useNavigate()
+    const userInfo = useQuery<UserInfo>({
+        queryFn: userAPI.getUserInfo,
+        queryKey: [userAPI.QUERY_KEY_GET_USER_INFO]
+    })
     const currentLocation = useRouterState({
         select: state => state.location
     })
@@ -102,6 +109,17 @@ const BottomNavigation = () => {
                 </ListItemDecorator>
                 Pengaturan
             </Tab>
+            {userInfo.data?.role == 99 && (
+                <Tab
+                    orientation="vertical"
+                    {...(currentIndex === 3 && { color: colors[3] })}
+                >
+                    <ListItemDecorator>
+                        <SettingIcon />
+                    </ListItemDecorator>
+                    Admin
+                </Tab>
+            )}
         </TabList>
     </Tabs>
 }

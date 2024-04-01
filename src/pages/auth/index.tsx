@@ -4,9 +4,9 @@ import { createLazyRoute, useNavigate } from "@tanstack/react-router"
 
 import icon from '@/assets/icon.png'
 import { useEffect, useState } from "react"
-import authAPI from '@/apis/auth'
+import userAPI from '@/apis/user'
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { AuthRequest } from "@/apis/auth.types"
+import { AuthRequest } from "@/apis/user.types"
 import useAuthStore from "@/stores/auth"
 import useNotification from "@/stores/notification"
 
@@ -25,7 +25,7 @@ const Auth = () => {
     const notification = useNotification()
 
     const authMutation = useMutation({
-        mutationFn: (request: AuthRequest) => isLoginState ? authAPI.loginUser(request) : authAPI.registerUser(request),
+        mutationFn: (request: AuthRequest) => isLoginState ? userAPI.loginUser(request) : userAPI.registerUser(request),
         onSuccess: (data) => {
             auth.setAuth(data.token)
         }
@@ -33,8 +33,8 @@ const Auth = () => {
 
     const userInfoQuery = useQuery({
         enabled: auth.accessToken != "",
-        queryFn: authAPI.getUserInfo,
-        queryKey: [authAPI.QUERY_KEY_GET_USER_INFO]
+        queryFn: userAPI.getUserInfo,
+        queryKey: [userAPI.QUERY_KEY_GET_USER_INFO]
     })
 
     const handleAuthSubmit = () => {
