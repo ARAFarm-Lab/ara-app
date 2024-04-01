@@ -1,5 +1,6 @@
-import network from "@/utils/network";
-import { Actuator } from "./setting.types";
+import network from '@/utils/network';
+
+import { Actuator } from './setting.types';
 
 const getActuators = (device_id: number): Promise<Actuator[]> => network.get(`/actuators?device_id=${device_id}`)
 const updateActuator = (actuator: Actuator) => network.patch('/actuator', JSON.stringify(actuator))

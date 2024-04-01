@@ -1,6 +1,7 @@
-import network from "@/utils/network";
-import { AuthRequest, AuthResponse } from "./user.types";
-import { UserInfo } from "@/stores/auh.types";
+import { UserInfo } from '@/stores/auh.types';
+import network from '@/utils/network';
+
+import { AuthRequest, AuthResponse } from './user.types';
 
 const getUserInfo = async (): Promise<UserInfo> => network.get('/users/info')
 const getUserList = async (): Promise<UserInfo[]> => network.get('/users')

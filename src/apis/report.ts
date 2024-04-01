@@ -1,5 +1,6 @@
-import network from "@/utils/network";
-import { GetSensorReportRequest, SensorReport } from "./report.types";
+import network from '@/utils/network';
+
+import { GetSensorReportRequest, SensorReport } from './report.types';
 
 const getSensorReport = (request: GetSensorReportRequest): Promise<SensorReport> => network.post(`/chart`, JSON.stringify(request))
 

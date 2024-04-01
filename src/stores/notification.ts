@@ -1,5 +1,6 @@
-import { create } from "zustand"
-import { NotificationStore, NotificationType } from "./notification.types"
+import { create } from 'zustand';
+
+import { NotificationStore, NotificationType } from './notification.types';
 
 const useNotification = create<NotificationStore>()(
     (set) => ({

@@ -1,4 +1,4 @@
-import { SensorType } from "@/constants/sensor"
+import { SensorType } from '@/constants/sensor';
 
 export type GetSensorReportRequest = {
     start_time: string

@@ -1,7 +1,9 @@
-import { Button, ColorPaletteProp, DialogContent, DialogTitle, Modal as JoyModal, ModalDialog, VariantProp } from "@mui/joy";
-import { Box } from "@mui/system";
-import { Transition, TransitionStatus } from "react-transition-group";
+import { Transition, TransitionStatus } from 'react-transition-group';
 
+import {
+    Button, ColorPaletteProp, DialogContent, DialogTitle, Modal as JoyModal, ModalDialog,
+    VariantProp, Box
+} from '@mui/joy';
 
 type ModalTransition = {
     [key in TransitionStatus]: React.CSSProperties;

@@ -1,4 +1,4 @@
-import { ActionIcon, ActionType } from "@/constants/action"
+import { ActionIcon, ActionType } from '@/constants/action';
 
 export type Actuator = {
     id: number,
