@@ -1,10 +1,12 @@
-import { Box, Button, LinearProgress, Snackbar, Typography } from '@mui/joy';
 import './App.css';
 
-import { Outlet, RouterProvider, createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
 import useAuthStore from '@/stores/auth';
 import useNotification from '@/stores/notification';
+import { Box, Button, LinearProgress, Snackbar, Typography } from '@mui/joy';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+    createRootRoute, createRoute, createRouter, Outlet, redirect, RouterProvider
+} from '@tanstack/react-router';
 
 const Root = () => {
   const notification = useNotification()

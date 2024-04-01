@@ -1,14 +1,14 @@
-import { Button, CircularProgress, Link, Typography } from "@mui/joy"
-import { Grid, TextField } from "@mui/material"
-import { createLazyRoute, useNavigate } from "@tanstack/react-router"
+import { useEffect, useState } from 'react';
 
-import icon from '@/assets/icon.png'
-import { useEffect, useState } from "react"
-import userAPI from '@/apis/user'
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { AuthRequest } from "@/apis/user.types"
-import useAuthStore from "@/stores/auth"
-import useNotification from "@/stores/notification"
+import userAPI from '@/apis/user';
+import { AuthRequest } from '@/apis/user.types';
+import icon from '@/assets/icon.png';
+import useAuthStore from '@/stores/auth';
+import useNotification from '@/stores/notification';
+import { Button, CircularProgress, Link, Typography } from '@mui/joy';
+import { Grid, TextField } from '@mui/material';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { createLazyRoute, useNavigate } from '@tanstack/react-router';
 
 const Auth = () => {
     const [isLoginState, setIsLoginState] = useState(true)

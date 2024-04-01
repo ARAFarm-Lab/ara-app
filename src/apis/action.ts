@@ -1,10 +1,6 @@
-import network from "@/utils/network";
-import {
-    Action,
-    ActionHistory,
-    DispatchActionRequest,
-    LastActionResponse
-} from './action.types'
+import network from '@/utils/network';
+
+import { Action, ActionHistory, DispatchActionRequest, LastActionResponse } from './action.types';
 
 const dispatchAction = (request: DispatchActionRequest) => network.post("/action/dispatch", JSON.stringify(request))
 const getActions = (device_id: number): Promise<Action[]> => network.get(`/action/available?device_id=${device_id}`)

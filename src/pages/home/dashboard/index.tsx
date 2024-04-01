@@ -1,23 +1,19 @@
-import { Box, Button, Card, Chip, CircularProgress, Grid, LinearProgress, Link, Typography } from '@mui/joy'
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
-import actionAPI from '@/apis/action'
-import userAPI from '@/apis/user'
-import reportAPI from '@/apis/report'
-import { ActionSource, getActionIcon, getActionValueText } from '@/constants/action'
-import {
-    Action,
-    ActionHistory,
-    DispatchActionRequest,
-} from '@/apis/action.types'
-import React, { useEffect, useRef, useState } from 'react'
-import { LineChart } from '@mui/x-charts/LineChart'
-import { SensorReport } from '@/apis/report.types'
-import dayjs, { Dayjs } from 'dayjs'
-import { SensorType } from '@/constants/sensor'
+import dayjs, { Dayjs } from 'dayjs';
+import React, { useEffect, useRef, useState } from 'react';
 
-import icon from '@/assets/icon.png'
-import useTabStore from '@/stores/tab'
-import { createLazyRoute } from '@tanstack/react-router'
+import actionAPI from '@/apis/action';
+import { Action, ActionHistory, DispatchActionRequest } from '@/apis/action.types';
+import reportAPI from '@/apis/report';
+import { SensorReport } from '@/apis/report.types';
+import userAPI from '@/apis/user';
+import icon from '@/assets/icon.png';
+import Loading from '@/components/loading';
+import { ActionSource, getActionIcon, getActionValueText } from '@/constants/action';
+import { SensorType } from '@/constants/sensor';
+import { Box, Button, Card, Chip, Grid, Link, Typography } from '@mui/joy';
+import { LineChart } from '@mui/x-charts/LineChart';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createLazyRoute, useNavigate } from '@tanstack/react-router';
 
 const initialReportState = {
     [SensorType.SoilMoisture]: {
@@ -41,7 +37,7 @@ const Dashboard = () => {
     const [mutationLoading, setMutationLoading] = useState<{ [key: string]: boolean }>({})
     const [reportStartTime, setReportStartTime] = useState<Dayjs>(createDateHourDayJSNow().add(-1, "hour"))
     const sensorReportCardRef = useRef<HTMLElement>()
-    const { setTab } = useTabStore()
+    const navigate = useNavigate()
 
     const userInfoQuery = useQuery({
         queryFn: userAPI.getUserInfo,
@@ -133,11 +129,7 @@ const Dashboard = () => {
         <Card sx={{ mt: 2, gap: 0, pt: 3, overflow: 'hidden' }} variant='soft'>
             <Box ref={sensorReportCardRef}>
                 <Typography fontSize="1rem">Kelembapan Tanah</Typography>
-                {soilMoistureSensorReportQuery.isLoading ? (
-                    <Grid container justifyContent='center'>
-                        <CircularProgress />
-                    </Grid>
-                ) : (
+                <Loading loading={soilMoistureSensorReportQuery.isLoading}>
                     <LineChart
                         xAxis={[{
                             dataKey: 'time',
@@ -172,35 +164,37 @@ const Dashboard = () => {
                         }}
                         width={sensorReportCardRef?.current?.clientWidth || 0}
                     />
-                )}
+                </Loading>
             </Box>
         </Card>
         <Typography sx={{ mt: 4 }} fontSize='1.2rem' fontWeight='600'>Panel Kontrol</Typography>
-        {actions.isLoading ? <LinearProgress sx={{ mt: 2 }} /> :
-            (actions.data?.length || 0) == 0 ? (
-                <Typography color="neutral" fontSize="sm" textAlign="center" sx={{ mt: 2 }}>
-                    Panel aktif tidak ditemukan. Pastikan panel di halaman <Link onClick={() => setTab(3)} fontWeight='600'>pengaturan</Link> telah aktif
-                </Typography>
-            ) :
-                <Box sx={{ display: 'grid', gap: 2, mt: 2, gridTemplateColumns: '1fr 1fr' }}>
-                    {actions.data?.map((action, index) => {
-                        const state = actionStates[index]
-                        return <ButtonCard
-                            key={index}
-                            id={index}
-                            title={action.name}
-                            Icon={getActionIcon(action.icon)}
-                            on={state.data?.value || false}
-                            onText={getActionValueText(action.type, true)}
-                            offText={getActionValueText(action.type, false)}
-                            isLoading={state?.isLoading || mutationLoading[action.id]}
-                            onClick={() => mutateState(action.id, !state.data?.value)} />
-                    })}
-                </Box>
-        }
+        <Loading loading={actions.isLoading}>
+            {
+                (actions.data?.length || 0) == 0 ? (
+                    <Typography color="neutral" fontSize="sm" textAlign="center" sx={{ mt: 2 }}>
+                        Panel aktif tidak ditemukan. Pastikan panel di halaman <Link onClick={() => navigate({ to: '/setting' })} fontWeight='600'>pengaturan</Link> telah aktif
+                    </Typography>
+                ) :
+                    <Box sx={{ display: 'grid', gap: 2, mt: 2, gridTemplateColumns: '1fr 1fr' }}>
+                        {actions.data?.map((action, index) => {
+                            const state = actionStates[index]
+                            return <ButtonCard
+                                key={index}
+                                id={index}
+                                title={action.name}
+                                Icon={getActionIcon(action.icon)}
+                                on={state.data?.value || false}
+                                onText={getActionValueText(action.type, true)}
+                                offText={getActionValueText(action.type, false)}
+                                isLoading={state?.isLoading || mutationLoading[action.id]}
+                                onClick={() => mutateState(action.id, !state.data?.value)} />
+                        })}
+                    </Box>
+            }
+        </Loading>
         <Box sx={{ mt: 0 }}>
             <Typography sx={{ mt: 4 }} fontSize='1.2rem' fontWeight='600'>Riwayat Kontrol</Typography>
-            {actionHistoriesQuery.isLoading ? <LinearProgress sx={{ mt: 2 }} /> : (
+            <Loading loading={actionHistoriesQuery.isLoading}>
                 <Grid container direction='column' sx={{ mt: 2 }} gap={2}>
                     {actionHistoriesQuery.data?.map(history => {
                         const Icon = getActionIcon(history.action.icon)
@@ -226,7 +220,7 @@ const Dashboard = () => {
                         )
                     })}
                 </Grid>
-            )}
+            </Loading>
         </Box>
     </Box>
 }
@@ -255,10 +249,7 @@ const appendReportData = (prev: SensorReport, report?: SensorReport): SensorRepo
         data: [...prev.data.slice(report.data.length), ...report.data]
     }
 }
-const createDateHourDayJSNow = () => {
-    return dayjs()
-        .set("second", 0)
-}
+const createDateHourDayJSNow = () => dayjs().set("second", 0)
 
 const generateGreetingMessage = () => {
     const date = new Date()

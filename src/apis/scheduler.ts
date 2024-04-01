@@ -1,5 +1,6 @@
-import network from "@/utils/network";
-import { CreateSchedulerRequest, ScheduledTask } from "./scheduler.types";
+import network from '@/utils/network';
+
+import { CreateSchedulerRequest, ScheduledTask } from './scheduler.types';
 
 const createSchedule = (request: CreateSchedulerRequest) => network.post("/schedule", JSON.stringify(request))
 const deleteSchedule = (id: number) => network.delete(`/schedule?id=${id}`)

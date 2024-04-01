@@ -1,16 +1,19 @@
-import { Box, Card, Chip, Grid, LinearProgress, Select, Option, Typography, Button } from "@mui/joy"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import settingAPI from '@/apis/setting'
-import userAPI from '@/apis/user'
-import { ActionIcon, getActionIcon } from "@/constants/action"
-import Modal from "@/components/modal"
-import { TextField } from "@mui/material"
-import { useState } from "react"
-import { Actuator } from "@/apis/setting.types"
-import { createLazyRoute, useNavigate } from "@tanstack/react-router"
-import ConfirmationDialog from "@/components/confirmation-dialog"
-import useAuthStore from "@/stores/auth"
-import useNotification from "@/stores/notification"
+import { useState } from 'react';
+
+import settingAPI from '@/apis/setting';
+import { Actuator } from '@/apis/setting.types';
+import userAPI from '@/apis/user';
+import ConfirmationDialog from '@/components/confirmation-dialog';
+import Modal from '@/components/modal';
+import { ActionIcon, getActionIcon } from '@/constants/action';
+import useAuthStore from '@/stores/auth';
+import useNotification from '@/stores/notification';
+import {
+    Box, Button, Card, Chip, Grid, LinearProgress, Option, Select, Typography
+} from '@mui/joy';
+import { TextField } from '@mui/material';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createLazyRoute, useNavigate } from '@tanstack/react-router';
 
 const Setting = () => {
     const [selectedPanel, setSelectedPanel] = useState<Actuator | null>()

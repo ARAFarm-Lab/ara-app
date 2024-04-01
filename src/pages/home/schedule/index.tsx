@@ -1,29 +1,32 @@
-import { DispatchActionRequest } from "@/apis/action.types";
+import dayjs, { Dayjs } from 'dayjs';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { DispatchActionRequest } from '@/apis/action.types';
 import schedulerAPI from '@/apis/scheduler';
-import { CreateSchedulerRequest, ScheduledTask } from "@/apis/scheduler.types";
-import { ActionType, ActionTypeValues, ScheduleStatusNames } from "@/constants/action";
-import { SchedulerRecurringMode } from "@/constants/scheduler";
-import { styled } from '@mui/material/styles';
+import { CreateSchedulerRequest, ScheduledTask } from '@/apis/scheduler.types';
+import settingAPI from '@/apis/setting';
+import ConfirmationDialog from '@/components/confirmation-dialog';
+import Loading from '@/components/loading';
+import Modal from '@/components/modal';
+import { ActionType, ActionTypeValues, ScheduleStatusNames } from '@/constants/action';
+import { defaultDateTimeFormat } from '@/constants/date';
+import { SchedulerRecurringMode } from '@/constants/scheduler';
+import useNotification from '@/stores/notification';
 import Add from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Box, Button, Card, CardContent, Grid, LinearProgress, Link, Option, Select, Tab, TabList, Tabs, Typography, tabClasses } from "@mui/joy";
-import { TimePicker } from "@mui/x-date-pickers";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {
+    Box, Button, Card, CardContent, Grid, Link, Option, Select, Tab, tabClasses, TabList, Tabs,
+    Typography
+} from '@mui/joy';
+import IconButton, { IconButtonProps } from '@mui/joy/IconButton';
+import { Collapse, TextField } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { TimePicker } from '@mui/x-date-pickers';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { renderTimeViewClock } from '@mui/x-date-pickers/timeViewRenderers';
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import dayjs, { Dayjs } from "dayjs";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Modal from '@/components/modal';
-import { Collapse, TextField } from "@mui/material";
-import IconButton, { IconButtonProps } from '@mui/joy/IconButton';
-import { defaultDateTimeFormat } from "@/constants/date";
-import ConfirmationDialog from "@/components/confirmation-dialog"
-
-import settingAPI from "@/apis/setting"
-import useTabStore from "@/stores/tab";
-import { createLazyRoute } from "@tanstack/react-router";
-import useNotification from "@/stores/notification";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createLazyRoute, useNavigate } from '@tanstack/react-router';
 
 const scheduleModeTabMap: { [key: number]: SchedulerRecurringMode } = {
     0: SchedulerRecurringMode.NONE,
@@ -74,9 +77,7 @@ const Schedule = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [schedulerAPI.QUERY_KEY_GET_UPCOMING_SCHEDULES, 1] })
             setIsAddModalOpen(false)
-            setExpandedSchedule({
-                id: -1,
-            })
+            setExpandedSchedule(null)
             notification.fire("Berhasil mengubah jadwal")
         },
     })
@@ -89,11 +90,9 @@ const Schedule = () => {
     const [scheduleModeIndex, setScheduleModeIndex] = useState<number>(0)
     const [scheduleTime, setScheduleTime] = useState<Dayjs>(generateDefaultDateTime())
     const [actions, setActions] = useState<DispatchActionRequest[]>([])
-    const [expandedSchedule, setExpandedSchedule] = useState<Partial<ScheduledTask>>({
-        id: -1,
-    })
-    const setTab = useTabStore(store => store.setTab)
+    const [expandedSchedule, setExpandedSchedule] = useState<ScheduledTask | null>(null)
     const notification = useNotification()
+    const navigate = useNavigate()
 
     const upcomingSchedules = useMemo(() => upcomingSchedulesQuery.data, [upcomingSchedulesQuery.data])
     const actuators = useMemo(() => [...actuatorsQuery.data || []], [actuatorsQuery.data])
@@ -117,7 +116,7 @@ const Schedule = () => {
         setScheduleModeIndex(0)
         setScheduleTime(generateDefaultDateTime())
         setActions([])
-        setExpandedSchedule({ id: -1 })
+        setExpandedSchedule(null)
         setIsAddModalOpen(true)
     }
 
@@ -135,16 +134,16 @@ const Schedule = () => {
     }, [scheduleName, scheduleDescription, scheduleModeIndex, scheduleTime, actions, duration, addScheduleMutation])
 
     const handleExpandSchedule = (schedule: ScheduledTask) => {
-        setExpandedSchedule(currentSchedule => schedule.id == currentSchedule.id ? { id: -1 } : schedule)
+        setExpandedSchedule(currentSchedule => schedule.id == currentSchedule?.id ? null : schedule)
     }
 
     const handleDeleteSchedule = () => {
-        if (!expandedSchedule.id) return
+        if (!expandedSchedule) return
         deleteScheduleMutation.mutate(expandedSchedule.id as number)
     }
 
     const handleEditSchedule = () => {
-        if (!expandedSchedule.id) return
+        if (!expandedSchedule) return
         updateScheduleMutation.mutate({
             ...expandedSchedule as ScheduledTask,
             name: scheduleName,
@@ -157,6 +156,7 @@ const Schedule = () => {
     }
 
     const handleEditScheduleAction = () => {
+        if (!expandedSchedule) return
         setScheduleName(expandedSchedule.name || "")
         setScheduleDescription(expandedSchedule.description || "")
         setScheduleDuration(expandedSchedule.duration || 0)
@@ -183,7 +183,7 @@ const Schedule = () => {
 
     // Reset schedule time when mode changes
     useEffect(() => {
-        if ((expandedSchedule.id || 0) > 0) return
+        if (!expandedSchedule || expandedSchedule.id > 0) return
         setScheduleTime(generateDefaultDateTime())
     }, [scheduleModeIndex, expandedSchedule])
 
@@ -199,51 +199,52 @@ const Schedule = () => {
                         startDecorator={<Add />}
                         onClick={handleAddNewSchedule}
                     >Tambah Jadwal</Button>
-                    {upcomingSchedulesQuery.isLoading && <LinearProgress />}
-                    {!upcomingSchedulesQuery.isLoading && !upcomingSchedules?.length && <Typography color="neutral" fontSize='sm'>Tidak ada Jadwal</Typography>}
-                    {upcomingSchedules?.map((schedule) => (
-                        <Card key={schedule.id} variant="soft">
-                            <Grid container width='100%' justifyContent='space-between'>
-                                <Box>
-                                    <Typography sx={{ m: 0 }} fontWeight='600'>{schedule.name}</Typography>
-                                    <Typography color="primary" fontSize='sm'>{dayjs(schedule.next_run_at).format(defaultDateTimeFormat)}</Typography>
-                                </Box>
-                                <ExpandMore
-                                    expand={expandedSchedule.id === schedule.id}
-                                    onClick={() => handleExpandSchedule(schedule)}>
-                                    <ExpandMoreIcon />
-                                </ExpandMore>
-                            </Grid>
-                            <Collapse in={expandedSchedule.id == schedule.id} timeout="auto" unmountOnExit>
-                                <CardContent>
-                                    {schedule.description && <Box sx={{ mt: 2 }}>
-                                        <Typography fontSize='sm' fontWeight={600}>Deskripsi</Typography>
-                                        <Typography fontSize='sm'>{schedule.description}</Typography>
-                                    </Box>}
-                                    {schedule.last_run_at && (
+                    <Loading loading={upcomingSchedulesQuery.isLoading}>
+                        {!upcomingSchedulesQuery.isLoading && !upcomingSchedules?.length && <Typography color="neutral" fontSize='sm'>Tidak ada Jadwal</Typography>}
+                        {upcomingSchedules?.map((schedule) => (
+                            <Card key={schedule.id} variant="soft">
+                                <Grid container width='100%' justifyContent='space-between'>
+                                    <Box>
+                                        <Typography sx={{ m: 0 }} fontWeight='600'>{schedule.name}</Typography>
+                                        <Typography color="primary" fontSize='sm'>{dayjs(schedule.next_run_at).format(defaultDateTimeFormat)}</Typography>
+                                    </Box>
+                                    <ExpandMore
+                                        expand={expandedSchedule?.id === schedule.id}
+                                        onClick={() => handleExpandSchedule(schedule)}>
+                                        <ExpandMoreIcon />
+                                    </ExpandMore>
+                                </Grid>
+                                <Collapse in={expandedSchedule?.id == schedule.id} timeout="auto" unmountOnExit>
+                                    <CardContent>
+                                        {schedule.description && <Box sx={{ mt: 2 }}>
+                                            <Typography fontSize='sm' fontWeight={600}>Deskripsi</Typography>
+                                            <Typography fontSize='sm'>{schedule.description}</Typography>
+                                        </Box>}
+                                        {schedule.last_run_at && (
+                                            <Box sx={{ mt: 2 }}>
+                                                <Typography fontSize='sm' fontWeight={600}>Waktu Eksekusi Terakhir</Typography>
+                                                <Typography fontSize='sm'>{dayjs(schedule.last_run_at).format(defaultDateTimeFormat)}</Typography>
+                                            </Box>
+                                        )}
                                         <Box sx={{ mt: 2 }}>
-                                            <Typography fontSize='sm' fontWeight={600}>Waktu Eksekusi Terakhir</Typography>
-                                            <Typography fontSize='sm'>{dayjs(schedule.last_run_at).format(defaultDateTimeFormat)}</Typography>
+                                            <Typography fontSize='sm' fontWeight={600}>Status Terakhir</Typography>
+                                            <Typography fontSize='sm'>{ScheduleStatusNames[schedule.last_run_status]}</Typography>
                                         </Box>
-                                    )}
-                                    <Box sx={{ mt: 2 }}>
-                                        <Typography fontSize='sm' fontWeight={600}>Status Terakhir</Typography>
-                                        <Typography fontSize='sm'>{ScheduleStatusNames[schedule.last_run_status]}</Typography>
-                                    </Box>
-                                    <Box alignSelf='flex-end' gap={1} display='flex'>
-                                        <Button onClick={handleEditScheduleAction}>Ubah</Button>
-                                        <Button color="danger" onClick={() => setIsDeleteConfirmationOpen(true)}>Hapus</Button>
-                                    </Box>
-                                </CardContent>
-                            </Collapse>
-                        </Card>
-                    ))}
+                                        <Box alignSelf='flex-end' gap={1} display='flex'>
+                                            <Button onClick={handleEditScheduleAction}>Ubah</Button>
+                                            <Button color="danger" onClick={() => setIsDeleteConfirmationOpen(true)}>Hapus</Button>
+                                        </Box>
+                                    </CardContent>
+                                </Collapse>
+                            </Card>
+                        ))}
+                    </Loading>
                 </Grid >
             </Box>
 
             {/* Add / Update Schedule Dialog */}
             <Modal
-                title={(expandedSchedule.id || 0) > 0 ? "Ubah Jadwal" : "Tambah Jadwal"}
+                title={expandedSchedule ? "Ubah Jadwal" : "Tambah Jadwal"}
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
                 buttonActions={[
@@ -252,7 +253,7 @@ const Schedule = () => {
                         variant: 'solid',
                         color: 'primary',
                         loading: addScheduleMutation.isPending || updateScheduleMutation.isPending,
-                        onClick: (expandedSchedule.id || 0) > 0 ? handleEditSchedule : handleSaveSchedule,
+                        onClick: expandedSchedule ? handleEditSchedule : handleSaveSchedule,
                     },
                     {
                         label: 'Tutup',
@@ -263,10 +264,7 @@ const Schedule = () => {
                 ]}
             >
                 <Grid container direction='column' gap={2}>
-                    <form style={{
-                        display: 'grid',
-                        gap: '1em'
-                    }}>
+                    <form style={{ display: 'grid', gap: '1em' }}>
                         <TextField size="small" label="Nama" value={scheduleName} onChange={e => setScheduleName(e.target.value)} />
                         <TextField size="small" multiline minRows={2} label="Deskripsi" value={scheduleDescription} onChange={e => setScheduleDescription(e.target.value)} />
                         <Tabs value={scheduleModeIndex} onChange={(_, val) => setScheduleModeIndex(val as number)} >
@@ -323,7 +321,7 @@ const Schedule = () => {
                             defaultAddActionRequest.actuator_id && <Button variant="soft" startDecorator={<Add />} color="primary" onClick={() => setActions(prev => ([...prev, { ...defaultAddActionRequest as DispatchActionRequest }]))}>Tambah Aksi</Button>
                             : (
                                 <Typography color="neutral" fontSize="sm" textAlign="center">
-                                    Tidak bisa menambah aksi karena tidak ada panel yang aktif. Pastikan panel pada <Link onClick={() => setTab(3)} fontWeight='600'>pengaturan</Link> telah aktif
+                                    Tidak bisa menambah aksi karena tidak ada panel yang aktif. Pastikan panel pada <Link onClick={() => navigate({ to: '/setting' })} fontWeight='600'>pengaturan</Link> telah aktif
                                 </Typography>
                             )}
                     </form>
@@ -332,13 +330,13 @@ const Schedule = () => {
 
             {/* Confirmation Dialog */}
             <ConfirmationDialog
-                description={`Apakah anda yakin untuk menghapus jadwal ${expandedSchedule.name} ? Anda perlu membuat jadwal baru jika ingin mengembalikan`}
+                description={`Apakah anda yakin untuk menghapus jadwal ${expandedSchedule?.name} ? Anda perlu membuat jadwal baru jika ingin mengembalikan`}
                 isOpen={isDeleteConfirmationOpen}
                 cancelText="Batalkan"
                 okText="Hapus"
                 onCancel={() => setIsDeleteConfirmationOpen(false)}
                 onOk={handleDeleteSchedule}
-                title={`Hapus jadwal ${expandedSchedule.name}`}
+                title={`Hapus jadwal ${expandedSchedule?.name}`}
             />
         </>
     )

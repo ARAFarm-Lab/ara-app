@@ -1,15 +1,16 @@
-import ListItemDecorator from '@mui/joy/ListItemDecorator';
-import Tabs from '@mui/joy/Tabs';
-import TabList from '@mui/joy/TabList';
-import Tab, { tabClasses } from '@mui/joy/Tab';
+import userAPI from '@/apis/user';
+import { UserInfo } from '@/stores/auh.types';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import SettingIcon from '@mui/icons-material/Settings';
-import { Outlet, createLazyRoute, useNavigate, useRouterState } from '@tanstack/react-router';
-import { Grid } from '@mui/joy';
+import { Grid, Typography } from '@mui/joy';
+import ListItemDecorator from '@mui/joy/ListItemDecorator';
+import Tab, { tabClasses } from '@mui/joy/Tab';
+import TabList from '@mui/joy/TabList';
+import Tabs from '@mui/joy/Tabs';
 import { useQuery } from '@tanstack/react-query';
-import userAPI from '@/apis/user'
-import { UserInfo } from '@/stores/auh.types';
+import { createLazyRoute, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 
 const colors = ['primary', 'danger', 'success', 'warning'] as const;
 const tabs = [
@@ -89,7 +90,7 @@ const BottomNavigation = () => {
                 <ListItemDecorator>
                     <HomeRoundedIcon />
                 </ListItemDecorator>
-                Dashboard
+                <Typography fontSize='sm'>Dashboard</Typography>
             </Tab>
             <Tab
                 orientation="vertical"
@@ -98,7 +99,7 @@ const BottomNavigation = () => {
                 <ListItemDecorator>
                     <ScheduleIcon />
                 </ListItemDecorator>
-                Penjadwalan
+                <Typography fontSize='sm'>Penjadwalan</Typography>
             </Tab>
             <Tab
                 orientation="vertical"
@@ -107,7 +108,7 @@ const BottomNavigation = () => {
                 <ListItemDecorator>
                     <SettingIcon />
                 </ListItemDecorator>
-                Pengaturan
+                <Typography fontSize='sm'>Pengaturan</Typography>
             </Tab>
             {userInfo.data?.role == 99 && (
                 <Tab
@@ -115,9 +116,9 @@ const BottomNavigation = () => {
                     {...(currentIndex === 3 && { color: colors[3] })}
                 >
                     <ListItemDecorator>
-                        <SettingIcon />
+                        <AdminPanelSettingsIcon />
                     </ListItemDecorator>
-                    Admin
+                    <Typography fontSize='sm'>Admin</Typography>
                 </Tab>
             )}
         </TabList>

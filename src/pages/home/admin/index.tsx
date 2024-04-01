@@ -1,15 +1,16 @@
-import Modal from "@/components/modal"
-import { Card, Chip, Grid, Option, Select, Typography } from "@mui/joy"
-import { Box, TextField } from "@mui/material"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createLazyRoute } from "@tanstack/react-router"
+import { useState } from 'react';
 
-import settingAPI from '@/apis/setting'
-import userAPI from '@/apis/user'
-import { useState } from "react"
-import { Actuator } from "@/apis/setting.types"
-import { UserInfo } from "@/stores/auh.types"
-import useNotification from "@/stores/notification"
+import settingAPI from '@/apis/setting';
+import { Actuator } from '@/apis/setting.types';
+import userAPI from '@/apis/user';
+import Loading from '@/components/loading';
+import Modal from '@/components/modal';
+import { UserInfo } from '@/stores/auh.types';
+import useNotification from '@/stores/notification';
+import { Card, Chip, Grid, Option, Select, Typography } from '@mui/joy';
+import { Box, TextField } from '@mui/material';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createLazyRoute } from '@tanstack/react-router';
 
 type itemState = Actuator | UserInfo | null
 
@@ -44,9 +45,9 @@ const renderModalBody = (item: itemState, mutator: (item: itemState) => void): J
     return (
         <Grid container flexDirection='column' gap={2}>
             <TextField label="Name" value={actuator.name} onChange={e => mutator({ ...item, name: e.target.value })} />
-            <Grid container justifyContent='space-between' direction='row' >
-                <TextField label="Pin Number" value={actuator.pin_number} onChange={e => mutator({ ...item, pin_number: Number(e.target.value) })} />
-                <TextField label="Terminal Number" value={actuator.terminal_number} onChange={e => mutator({ ...item, terminal_number: Number(e.target.value) })} />
+            <Grid container justifyContent='space-between' direction='row' gap={2}>
+                <TextField sx={{ flex: 1 }} label="Pin Number" value={actuator.pin_number} onChange={e => mutator({ ...item, pin_number: Number(e.target.value) })} />
+                <TextField sx={{ flex: 1 }} label="Terminal Number" value={actuator.terminal_number} onChange={e => mutator({ ...item, terminal_number: Number(e.target.value) })} />
             </Grid>
         </Grid >
     )
@@ -109,33 +110,37 @@ const Admin = () => {
             <Box sx={{ px: 2 }} className="fade">
                 <Typography sx={{ mt: 4 }} level="h2" fontWeight='500'>Admin Panel</Typography>
                 <Typography sx={{ mt: 2 }} level="h4">Users</Typography>
-                <Grid container sx={{ mt: 1 }} flexDirection='column' gap={2}>
-                    {usersQuery.data?.map(user => (
-                        <Card key={user.user_id} onClick={() => handleCardClick(user)}>
-                            <Box display='flex' justifyContent='space-between'>
-                                <Box>
-                                    {user.name}
-                                    {user.role == 99 && <Chip sx={{ ml: 2 }} color="danger">Admin</Chip>}
+                <Loading loading={usersQuery.isLoading}>
+                    <Grid container sx={{ mt: 1 }} flexDirection='column' gap={2}>
+                        {usersQuery.data?.map(user => (
+                            <Card key={user.user_id} onClick={() => handleCardClick(user)}>
+                                <Box display='flex' justifyContent='space-between'>
+                                    <Box>
+                                        {user.name}
+                                        {user.role == 99 && <Chip sx={{ ml: 2 }} size="sm" color="danger">Admin</Chip>}
+                                    </Box>
+                                    <Chip color={user.is_active ? 'success' : 'danger'}>{user.is_active ? "Active" : "Not Active"}</Chip>
                                 </Box>
-                                <Chip color={user.is_active ? 'success' : 'danger'}>{user.is_active ? "Active" : "Not Active"}</Chip>
-                            </Box>
-                        </Card>
-                    ))}
-                </Grid>
+                            </Card>
+                        ))}
+                    </Grid>
+                </Loading>
                 <Typography sx={{ mt: 2 }} level="h4">Panels</Typography>
-                <Grid container sx={{ mt: 1 }} flexDirection='column' gap={2}>
-                    {actuatorsQuery.data?.map(actuator => (
-                        <Card key={actuator.id} onClick={() => handleCardClick(actuator)}>
-                            <Box display='flex' justifyContent='space-between'>
-                                {actuator.name}
-                                <Grid container gap={1}>
-                                    <Chip color="primary">Pin: {actuator.pin_number}</Chip>
-                                    <Chip color="warning">{actuator.terminal_number}</Chip>
-                                </Grid>
-                            </Box>
-                        </Card>
-                    ))}
-                </Grid>
+                <Loading loading={actuatorsQuery.isLoading}>
+                    <Grid container sx={{ mt: 1 }} flexDirection='column' gap={2}>
+                        {actuatorsQuery.data?.map(actuator => (
+                            <Card key={actuator.id} onClick={() => handleCardClick(actuator)}>
+                                <Box display='flex' justifyContent='space-between'>
+                                    {actuator.name}
+                                    <Grid container gap={1}>
+                                        <Chip color="primary">Pin: {actuator.pin_number}</Chip>
+                                        <Chip color="warning">{actuator.terminal_number}</Chip>
+                                    </Grid>
+                                </Box>
+                            </Card>
+                        ))}
+                    </Grid>
+                </Loading>
             </Box >
             <Modal
                 title={renderModalTitle(selectedItem)}
