@@ -1,7 +1,7 @@
 import { Box, Button, Card, Chip, CircularProgress, Grid, LinearProgress, Link, Typography } from '@mui/joy'
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import actionAPI from '@/apis/action'
-import authAPI from '@/apis/auth'
+import userAPI from '@/apis/user'
 import reportAPI from '@/apis/report'
 import { ActionSource, getActionIcon, getActionValueText } from '@/constants/action'
 import {
@@ -44,8 +44,8 @@ const Dashboard = () => {
     const { setTab } = useTabStore()
 
     const userInfoQuery = useQuery({
-        queryFn: authAPI.getUserInfo,
-        queryKey: [authAPI.QUERY_KEY_GET_USER_INFO]
+        queryFn: userAPI.getUserInfo,
+        queryKey: [userAPI.QUERY_KEY_GET_USER_INFO]
     })
 
     const actions = useQuery<Action[]>({

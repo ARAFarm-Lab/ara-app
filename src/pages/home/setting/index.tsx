@@ -1,9 +1,9 @@
 import { Box, Card, Chip, Grid, LinearProgress, Select, Option, Typography, Button } from "@mui/joy"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import settingAPI from '@/apis/setting'
-import authAPI from '@/apis/auth'
+import userAPI from '@/apis/user'
 import { ActionIcon, getActionIcon } from "@/constants/action"
-import Modal from "../schedule/modal"
+import Modal from "@/components/modal"
 import { TextField } from "@mui/material"
 import { useState } from "react"
 import { Actuator } from "@/apis/setting.types"
@@ -40,7 +40,7 @@ const Setting = () => {
 
     const handleLogout = () => {
         auth.clearAuth()
-        queryClient.removeQueries({queryKey: [authAPI.QUERY_KEY_GET_USER_INFO]})
+        queryClient.removeQueries({queryKey: [userAPI.QUERY_KEY_GET_USER_INFO]})
         setLogoutModalOpened(false)
         navigate({ to: '/auth', replace: true })
         notification.fire('Berhasil Keluar Akun')

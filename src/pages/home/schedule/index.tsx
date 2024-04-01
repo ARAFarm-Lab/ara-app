@@ -14,11 +14,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import dayjs, { Dayjs } from "dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Modal from './modal';
+import Modal from '@/components/modal';
 import { Collapse, TextField } from "@mui/material";
 import IconButton, { IconButtonProps } from '@mui/joy/IconButton';
 import { defaultDateTimeFormat } from "@/constants/date";
-import ConfirmationDialog from "../../../components/confirmation-dialog"
+import ConfirmationDialog from "@/components/confirmation-dialog"
 
 import settingAPI from "@/apis/setting"
 import useTabStore from "@/stores/tab";
