@@ -22,7 +22,7 @@ const Auth = () => {
     })
     const auth = useAuthStore()
     const navigate = useNavigate()
-    const notification = useNotification()
+    const { fire } = useNotification()
 
     const authMutation = useMutation({
         mutationFn: (request: AuthRequest) => isLoginState ? userAPI.loginUser(request) : userAPI.registerUser(request),
@@ -75,9 +75,9 @@ const Auth = () => {
                 to: '/dashboard',
                 replace: true,
             })
-            notification.fire(`Selamat Datang ${userInfoQuery.data.name}!`)
+            fire(`Selamat Datang ${userInfoQuery.data.name}!`)
         }
-    }, [userInfoQuery.data, userInfoQuery.isLoading, navigate, notification])
+    }, [userInfoQuery.data, userInfoQuery.isLoading, navigate, fire])
 
     return (
         <Grid container flexDirection='column' gap={2} sx={{ p: 2, height: '100vh' }} alignItems='center' justifyContent='center' className="fade">

@@ -21,6 +21,7 @@ export type LastActionResponse = {
 export type ActionHistory = {
     value: ActionValue
     action_by: ActionSource
+    action_executor: string,
     action_at: string,
     action: Action
 }

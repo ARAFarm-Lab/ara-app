@@ -65,7 +65,6 @@ const BottomNavigation = () => {
             left: 0,
             right: 0,
             boxShadow: theme.shadow.sm,
-            '--joy-shadowChannel': theme.vars.palette[colors[currentIndex]].darkChannel,
             [`& .${tabClasses.root}`]: {
                 py: 1,
                 flex: 1,

@@ -22,9 +22,16 @@ const doRequest = async <T>(endpoint: string, config: any): Promise<T> => {
         const response = await fetch(buildURL(endpoint), buildRequestConfig(config))
         const json = await response.json()
         if (!json.is_success || response.status < 200 || response.status > 299) {
+            if (json.erorr) {
+                return Promise.reject({
+                    message: json.error,
+                    code: json.code
+                })
+            }
+
             return Promise.reject({
-                message: json.error,
-                code: json.code
+                message: "Error",
+                code: response.status
             })
         }
         return Promise.resolve(json.data)
