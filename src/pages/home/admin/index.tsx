@@ -29,14 +29,16 @@ const renderModalBody = (item: itemState, mutator: (item: itemState) => void): J
         return (
             <Grid container justifyContent='space-between' flexDirection='column' gap={2}>
                 <TextField label="Name" value={item.name} onChange={e => mutator({ ...item, name: e.target.value })} />
-                <Select value={user.is_active ? "true" : "false"} onChange={(_, val) => mutator({ ...item, is_active: (val as string) == "true" })}>
-                    <Option key="true" value="true">Active</Option>
-                    <Option key="false" value="false">Not Active</Option>
-                </Select>
-                <Select value={user.role} onChange={(_, val) => mutator({ ...item, role: Number(val) })}>
-                    <Option key={2} value={2}>User</Option>
-                    <Option key={99} value={99}>Admin</Option>
-                </Select>
+                <Grid container justifyContent='space-between' direction='row' gap={2}>
+                    <Select value={user.is_active ? "true" : "false"} onChange={(_, val) => mutator({ ...item, is_active: (val as string) == "true" })}>
+                        <Option key="true" value="true">Active</Option>
+                        <Option key="false" value="false">Not Active</Option>
+                    </Select>
+                    <Select value={user.role} onChange={(_, val) => mutator({ ...item, role: Number(val) })}>
+                        <Option key={2} value={2}>User</Option>
+                        <Option key={99} value={99}>Admin</Option>
+                    </Select>
+                </Grid>
             </Grid>
         )
     }
@@ -45,7 +47,7 @@ const renderModalBody = (item: itemState, mutator: (item: itemState) => void): J
     return (
         <Grid container flexDirection='column' gap={2}>
             <TextField label="Name" value={actuator.name} onChange={e => mutator({ ...item, name: e.target.value })} />
-            <Grid container justifyContent='space-between' direction='row' gap={2}>
+            <Grid container direction='row' gap={2}>
                 <TextField sx={{ flex: 1 }} label="Pin Number" value={actuator.pin_number} onChange={e => mutator({ ...item, pin_number: Number(e.target.value) })} />
                 <TextField sx={{ flex: 1 }} label="Terminal Number" value={actuator.terminal_number} onChange={e => mutator({ ...item, terminal_number: Number(e.target.value) })} />
             </Grid>

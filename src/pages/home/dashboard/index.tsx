@@ -26,9 +26,8 @@ const initialReportState = {
 }
 
 const actionSourceNameMap: ({ [key in ActionSource]: string }) = {
-    [ActionSource.User]: "User",
     [ActionSource.Scheduler]: "Otomatis oleh Sistem",
-    [ActionSource.Dispatcher]: "Oleh Sistem"
+    [ActionSource.Dispatcher]: "Otomatis oleh Sistem"
 }
 
 const Dashboard = () => {
@@ -213,7 +212,7 @@ const Dashboard = () => {
                                     <Grid container direction='column' alignItems='flex-end'>
                                         <Typography fontSize='xs' textColor={'primary.600'} fontWeight='600'>{dayjs(history.action_at).format("DD-MM-YYYY")}</Typography>
                                         <Typography fontSize='xs' textColor={'primary.600'} fontWeight='600'>{dayjs(history.action_at).format("HH:mm")}</Typography>
-                                        <Typography fontSize='xs'>{actionSourceNameMap[history.action_by]}</Typography>
+                                        <Typography fontSize='xs'>{history.action_by > 0 ? history.action_executor : actionSourceNameMap[history.action_by]}</Typography>
                                     </Grid>
                                 </Grid>
                             </Card>

@@ -5,9 +5,8 @@ import WaterDropIcon from '@mui/icons-material/WaterDrop';
 import WbIncandescentIcon from '@mui/icons-material/WbIncandescent';
 
 export enum ActionSource {
-    User = 1,
-    Scheduler = 2,
-    Dispatcher = 3,
+    Scheduler = -1,
+    Dispatcher = -2,
 }
 
 export enum ActionType {
