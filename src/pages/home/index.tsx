@@ -44,7 +44,8 @@ const BottomNavigation = () => {
     const navigate = useNavigate()
     const userInfo = useQuery<UserInfo>({
         queryFn: userAPI.getUserInfo,
-        queryKey: [userAPI.QUERY_KEY_GET_USER_INFO]
+        queryKey: [userAPI.QUERY_KEY_GET_USER_INFO],
+        refetchOnWindowFocus: true
     })
     const currentLocation = useRouterState({
         select: state => state.location
