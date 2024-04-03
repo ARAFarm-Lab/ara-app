@@ -30,6 +30,8 @@ const actionSourceNameMap: ({ [key in ActionSource]: string }) = {
     [ActionSource.Dispatcher]: "Otomatis oleh Sistem"
 }
 
+const refetchInterval = 60 * 1000 // 1 minute
+
 const Dashboard = () => {
     const queryClient = useQueryClient()
     const [reportData, setReportData] = useState<{ [key in SensorType]: SensorReport }>(initialReportState)
@@ -40,7 +42,8 @@ const Dashboard = () => {
 
     const userInfoQuery = useQuery({
         queryFn: userAPI.getUserInfo,
-        queryKey: [userAPI.QUERY_KEY_GET_USER_INFO]
+        queryKey: [userAPI.QUERY_KEY_GET_USER_INFO],
+        refetchInterval
     })
 
     const actions = useQuery<Action[]>({
@@ -51,8 +54,27 @@ const Dashboard = () => {
     const actionStates = useQueries({
         queries: actions.data?.map(action => ({
             queryKey: [actionAPI.QUERY_KEY_GET_ACTION_VALUE, 1, action.id],
-            queryFn: () => actionAPI.getActionValue(1, action.id)
+            queryFn: () => actionAPI.getActionValue(1, action.id),
+            refetchInterval,
+            refetchIntervalInBackground: true
         })) || []
+    })
+
+    const soilMoistureSensorReportQuery = useQuery<SensorReport>({
+        queryKey: [reportAPI.QUERY_GET_SENSOR_REPORT, reportStartTime.format()],
+        queryFn: () => reportAPI.getSensorReport({
+            start_time: reportStartTime.format(),
+            end_time: createDateHourDayJSNow().format(),
+            device_id: 1,
+            sensor_type: SensorType.SoilMoisture
+        }),
+    })
+
+    const actionHistoriesQuery = useQuery<ActionHistory[]>({
+        queryKey: [actionAPI.QUERY_KEY_GET_ACTION_HISTORIES],
+        queryFn: () => actionAPI.getActionHistories(1),
+        refetchInterval,
+        refetchIntervalInBackground: true
     })
 
     const actionMutation = useMutation({
@@ -68,22 +90,6 @@ const Dashboard = () => {
             setMutationLoading(prev => ({ ...prev, [request.actuator_id]: false }))
         }
     })
-
-    const soilMoistureSensorReportQuery = useQuery<SensorReport>({
-        queryKey: [reportAPI.QUERY_GET_SENSOR_REPORT, reportStartTime.format()],
-        queryFn: () => reportAPI.getSensorReport({
-            start_time: reportStartTime.format(),
-            end_time: createDateHourDayJSNow().format(),
-            device_id: 1,
-            sensor_type: SensorType.SoilMoisture
-        }),
-    })
-
-    const actionHistoriesQuery = useQuery<ActionHistory[]>({
-        queryKey: [actionAPI.QUERY_KEY_GET_ACTION_HISTORIES],
-        queryFn: () => actionAPI.getActionHistories(1)
-    })
-
 
     const mutateState = (actuator_id: number, value: boolean) => {
         if (mutationLoading[actuator_id]) {

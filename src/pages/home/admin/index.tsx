@@ -153,7 +153,7 @@ const Admin = () => {
                         label: 'Save',
                         variant: 'solid',
                         color: 'primary',
-                        loading: false,
+                        loading: userMutation.isPending || actuatorMutation.isPending,
                         onClick: handleUpdateItem,
                     },
                     {

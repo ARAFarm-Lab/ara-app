@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import settingAPI from '@/apis/setting';
 import { Actuator } from '@/apis/setting.types';
@@ -18,6 +18,7 @@ import { createLazyRoute, useNavigate } from '@tanstack/react-router';
 const Setting = () => {
     const [selectedPanel, setSelectedPanel] = useState<Actuator | null>()
     const [isLogoutModalOpened, setLogoutModalOpened] = useState(false)
+    const [isEditPanelModalOpened, setEditPanelModalOpened] = useState(false)
     const auth = useAuthStore()
     const navigate = useNavigate()
     const notification = useNotification()
@@ -43,11 +44,15 @@ const Setting = () => {
 
     const handleLogout = () => {
         auth.clearAuth()
-        queryClient.removeQueries({queryKey: [userAPI.QUERY_KEY_GET_USER_INFO]})
+        queryClient.removeQueries({ queryKey: [userAPI.QUERY_KEY_GET_USER_INFO] })
         setLogoutModalOpened(false)
         navigate({ to: '/auth', replace: true })
         notification.fire('Berhasil Keluar Akun')
     }
+
+    useEffect(() => {
+        setEditPanelModalOpened(!!selectedPanel)
+    }, [selectedPanel])
 
     return <>
         <Box sx={{ px: 2 }} className="fade">
@@ -87,8 +92,8 @@ const Setting = () => {
         />
         <Modal
             title="Edit Panel"
-            isOpen={selectedPanel != null}
-            onClose={() => { setSelectedPanel(null) }}
+            isOpen={isEditPanelModalOpened}
+            onClose={() => { setEditPanelModalOpened(false) }}
             buttonActions={[
                 {
                     label: 'Simpan',
@@ -101,7 +106,7 @@ const Setting = () => {
                     label: 'Batal',
                     variant: 'outlined',
                     color: 'danger',
-                    onClick: () => setSelectedPanel(null)
+                    onClick: () => setEditPanelModalOpened(false)
                 }
             ]}
         >
