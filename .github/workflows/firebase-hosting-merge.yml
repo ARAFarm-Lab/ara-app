@@ -14,8 +14,14 @@ jobs:
       - name: Setting up env file
         env:
           VITE_BASE_URL: ${{ secrets.VITE_BASE_URL }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: |
-          echo "VITE_BASE_URL=${VITE_BASE_URL}" > .env.production
+          tee .env.production <<EOF
+          VITE_BASE_URL=${VITE_BASE_URL}
+          SENTRY_DSN=${SENTRY_DSN}
+          SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+          EOF
       - run: npm install && npm run build
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:

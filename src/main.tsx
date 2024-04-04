@@ -10,6 +10,7 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { getAnalytics } from 'firebase/analytics';
 import { initializeApp } from 'firebase/app';
+import * as Sentry from "@sentry/react";
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
@@ -35,6 +36,21 @@ dayjs.tz.setDefault('Asia/Jakarta');
 
 const app = initializeApp(firebaseConfig);
 getAnalytics(app)
+
+Sentry.init({
+  dsn: import.meta.env.SENTRY_DSN,
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration({
+      maskAllText: false,
+      blockAllMedia: false,
+    }),
+  ],
+  tracesSampleRate: 1.0, //  Capture 100% of the transactions
+  tracePropagationTargets: ["localhost", import.meta.env.VITE_BASE_URL],
+  replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%. You may want to change it to 100% while in development and then sample at a lower rate in production.
+  replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.
+});
 
 const queryClient = new QueryClient()
 ReactDOM.createRoot(document.getElementById('root')!).render(
