@@ -2,10 +2,10 @@ import './App.css';
 
 import useAuthStore from '@/stores/auth';
 import useNotification from '@/stores/notification';
-import { Box, Button, LinearProgress, Snackbar, Typography } from '@mui/joy';
+import { Box, Button, Grid, LinearProgress, Snackbar, Typography } from '@mui/joy';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-    createRootRoute, createRoute, createRouter, Outlet, redirect, RouterProvider
+  createRootRoute, createRoute, createRouter, Outlet, redirect, RouterProvider, useNavigate
 } from '@tanstack/react-router';
 
 const Root = () => {
@@ -50,7 +50,6 @@ const Root = () => {
 // Root route section
 const rootRoute = createRootRoute({
   component: Root,
-  notFoundComponent: () => <Typography>Halaman Tidak Ditemukan, Hubungi Admin</Typography>
 })
 
 // Home route section
@@ -117,10 +116,22 @@ const routeTree = rootRoute.addChildren([
   ])
 ])
 
+const ErrorPage = ({ message }: { message: string }) => {
+  const navigate = useNavigate()
+  return (
+    <Grid sx={{ height: '100vh' }} container justifyContent='center' alignItems='center' flexDirection='column'>
+      <Typography fontSize='5em'>:(</Typography>
+      <Typography level='h4'>{message}</Typography>
+      <Button sx={{ mt: 4 }} onClick={() => navigate({ to: '/dashboard' })}>Kembali</Button>
+    </Grid>
+  )
+}
+
 const router = createRouter({
   routeTree,
   defaultPendingComponent: () => <Box><LinearProgress /></Box>,
-  defaultErrorComponent: () => <Typography>Terjadi Kesalahan, Segera Hubungi Admin</Typography>,
+  defaultErrorComponent: () => <ErrorPage message='Terjadi Kesalahan, Hubungi Admin' />,
+  defaultNotFoundComponent: () => <ErrorPage message='Halaman Tidak Ditemukan.'/>,
   defaultPendingMs: 0,
   defaultPendingMinMs: 0
 })
