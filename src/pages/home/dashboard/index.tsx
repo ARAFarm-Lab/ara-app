@@ -92,9 +92,6 @@ const Dashboard = () => {
     })
 
     const mutateState = (actuator_id: number, value: boolean) => {
-        if (mutationLoading[actuator_id]) {
-            return
-        }
         const request: DispatchActionRequest = {
             actuator_id,
             device_id: 1,
@@ -183,6 +180,7 @@ const Dashboard = () => {
                     <Box sx={{ display: 'grid', gap: 2, mt: 2, gridTemplateColumns: '1fr 1fr' }}>
                         {actions.data?.map((action, index) => {
                             const state = actionStates[index]
+                            const isLoading = state?.isLoading || mutationLoading[action.id]
                             return <ButtonCard
                                 key={index}
                                 id={index}
@@ -191,8 +189,8 @@ const Dashboard = () => {
                                 on={state.data?.value || false}
                                 onText={getActionValueText(action.type, true)}
                                 offText={getActionValueText(action.type, false)}
-                                isLoading={state?.isLoading || mutationLoading[action.id]}
-                                onClick={() => mutateState(action.id, !state.data?.value)} />
+                                isLoading={isLoading}
+                                onClick={() => !isLoading ? mutateState(action.id, !state.data?.value) : {}} />
                         })}
                     </Box>
             }
