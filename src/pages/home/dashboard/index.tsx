@@ -180,7 +180,7 @@ const Dashboard = () => {
                     <Box sx={{ display: 'grid', gap: 2, mt: 2, gridTemplateColumns: '1fr 1fr' }}>
                         {actions.data?.map((action, index) => {
                             const state = actionStates[index]
-                            const isLoading = state?.isLoading || mutationLoading[action.id]
+                            const isLoading = state?.isFetching || mutationLoading[action.id]
                             return <ButtonCard
                                 key={index}
                                 id={index}
